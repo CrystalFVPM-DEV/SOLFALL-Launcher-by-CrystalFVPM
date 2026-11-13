@@ -1,0 +1,32 @@
+2026-11-13T20:35:29.201Z ==== SOLFALL Launcher 0.2.1 start (linux x86_64) args=[]
+2026-11-13T20:35:29.201Z [env] webview runtime=2.54.0
+2026-11-13T20:35:29.201Z [env] browser args="--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection,Translate,AutofillServerCommunication --autoplay-policy=no-user-gesture-required" (identical for every webview)
+2026-11-13T20:35:29.201Z [env] data dir=/workspace/solfall-launcher/e2e/v0.2.1/profile/data/online.solfall.launcher (WebView2 adds EBWebView\)
+2026-11-13T20:35:29.201Z [env] updater endpoints=["http://127.0.0.1:8788/CrystalFVPM-DEV/SOLFALL-Launcher-by-CrystalFVPM/releases/latest/download/latest.json"] pubkey=TEST-ONLY (B8AC8CD75A1001F5)
+2026-11-13T20:35:29.201Z [env] settings on_launch=replace close_action=quit rev=2
+2026-11-13T20:35:31.686Z [page] main started tauri://localhost
+2026-11-13T20:35:34.869Z [ui] music error 4
+2026-11-13T20:35:35.097Z [page] main finished tauri://localhost
+2026-11-13T20:35:35.518Z [ui] state main
+2026-11-13T20:35:35.712Z [ui] update check available=true version=0.2.2
+2026-11-13T20:35:35.712Z [ui] state launcher-update
+2026-11-13T20:35:35.874Z [news] GET https://raw.githubusercontent.com/CrystalFVPM-DEV/SOLFALL-Launcher-by-CrystalFVPM/main/content/news.json -> 404
+2026-11-13T20:35:35.908Z [ui] news source=bundled items=6 (HTTP 404)
+2026-11-13T20:35:36.544Z [updater] download complete: 192502264 bytes, signature verified OK (minisign)
+2026-11-13T20:35:37.007Z [ui] state main ready
+2026-11-13T20:36:19.768Z [ui] state update ready
+2026-11-13T20:36:23.035Z [updater] installing 0.2.2 ...
+2026-11-13T20:36:23.697Z [updater] installed; restarting
+2026-11-13T20:36:25.607Z ==== SOLFALL Launcher 0.2.2 start (linux x86_64) args=[]
+2026-11-13T20:36:25.607Z [env] webview runtime=2.54.0
+2026-11-13T20:36:25.607Z [env] browser args="--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection,Translate,AutofillServerCommunication --autoplay-policy=no-user-gesture-required" (identical for every webview)
+2026-11-13T20:36:25.607Z [env] data dir=/workspace/solfall-launcher/e2e/v0.2.1/profile/data/online.solfall.launcher (WebView2 adds EBWebView\)
+2026-11-13T20:36:25.607Z [env] updater endpoints=["http://127.0.0.1:8788/CrystalFVPM-DEV/SOLFALL-Launcher-by-CrystalFVPM/releases/latest/download/latest.json"] pubkey=TEST-ONLY (B8AC8CD75A1001F5)
+2026-11-13T20:36:25.607Z [env] settings on_launch=replace close_action=quit rev=2
+2026-11-13T20:36:25.856Z [page] main started tauri://localhost
+2026-11-13T20:36:28.587Z [ui] music error 4
+2026-11-13T20:36:28.785Z [page] main finished tauri://localhost
+2026-11-13T20:36:29.379Z [ui] state main
+2026-11-13T20:36:29.495Z [ui] update check available=false
+2026-11-13T20:36:29.578Z [news] GET https://raw.githubusercontent.com/CrystalFVPM-DEV/SOLFALL-Launcher-by-CrystalFVPM/main/content/news.json -> 404
+2026-11-13T20:36:29.644Z [ui] news source=bundled items=6 (HTTP 404)

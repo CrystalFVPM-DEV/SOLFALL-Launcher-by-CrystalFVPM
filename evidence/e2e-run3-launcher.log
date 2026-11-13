@@ -1,0 +1,7 @@
+
+(solfall-launcher:202362): dbind-WARNING **: 20:55:11.208: AT-SPI: Error retrieving accessibility bus address: org.freedesktop.DBus.Error.ServiceUnknown: The name org.a11y.Bus was not provided by any .service files
+[updater] descarga completa: 108734968 bytes, firma verificada OK (minisign)
+[updater] instalando 0.1.1 ...
+[updater] instalado; reiniciando
+
+(solfall-launcher:203236): dbind-WARNING **: 20:56:13.962: AT-SPI: Error retrieving accessibility bus address: org.freedesktop.DBus.Error.ServiceUnknown: The name org.a11y.Bus was not provided by any .service files

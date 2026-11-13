@@ -1,0 +1,32 @@
+# Updater keys: NEVER in the repo. Production keys live only in Solfall's CI secrets (+ offline backup).
+keys/
+keys/*.key
+*.key
+# build output
+node_modules/
+target/
+src-tauri/target/
+src-tauri/gen/
+build-logs/
+dist/
+*.log
+# binaries / archives (published as release assets, never in git)
+*.exe
+*.msi
+*.zip
+*.7z
+*.AppImage
+*.deb
+*.rpm
+*.dmg
+*.nupkg
+# local test data
+e2e/
+e2e-windows/installers/
+e2e-windows/gh-sim/
+e2e-windows/gh-sim-tampered/
+test-server/root/
+test-server/profile/
+# evidence logs ARE versioned
+!evidence/*.log
+!evidence/**/*.log

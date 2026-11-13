@@ -1,0 +1,68 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "SolfallLauncher",
+  "version": "0.2.1",
+  "identifier": "online.solfall.launcher",
+  "build": {
+    "frontendDist": "../src",
+    "beforeBuildCommand": "node tools/bundle-news.mjs"
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "windows": [],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://solfall.online https://raw.githubusercontent.com; media-src 'self' blob:; font-src 'self'; connect-src ipc: http://ipc.localhost 'self' https://raw.githubusercontent.com https://play.solfall.online https://solfall.example"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "nsis",
+      "appimage"
+    ],
+    "createUpdaterArtifacts": true,
+    "publisher": "CrystalFVPM",
+    "shortDescription": "SOLFALL Launcher",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.ico",
+      "icons/icon.png"
+    ],
+    "windows": {
+      "webviewInstallMode": {
+        "type": "embedBootstrapper",
+        "silent": true
+      },
+      "nsis": {
+        "installMode": "currentUser",
+        "displayLanguageSelector": false,
+        "template": "nsis/installer.nsi",
+        "installerHooks": "../branding/installer/hooks.nsh",
+        "headerImage": "../branding/active/header.bmp",
+        "sidebarImage": "../branding/active/sidebar.bmp",
+        "installerIcon": "../branding/active/installer.ico",
+        "languages": [
+          "English"
+        ],
+        "customLanguageFiles": {
+          "English": "../branding/installer/English.nsh"
+        }
+      }
+    },
+    "longDescription": "SOLFALL Launcher: opens Solfall (play.solfall.online), shows news and keeps itself up to date.",
+    "copyright": "Launcher code: Apache-2.0. Solfall assets, logo and music are property of their owners and used with permission; not covered by the Apache-2.0 license."
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEQ3OEYwMEE4NkNCMDQ0QzcKUldUSFJMQnNxQUNQMStNeGNJZWM5cm96K1dJajBrZFJ0WlBsY0lYcm12L25oSGpYU3ZhOXZiMVcK",
+      "endpoints": [
+        "https://github.com/CrystalFVPM-DEV/SOLFALL-Launcher-by-CrystalFVPM/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "solfall-launcher",
+  "version": "0.2.1",
+  "private": true,
+  "description": "SOLFALL Launcher \u2014 Tauri v2 / WebView2",
+  "scripts": {
+    "tauri": "tauri",
+    "build": "tauri build --bundles nsis",
+    "set-pubkey": "node tools/set-pubkey.mjs",
+    "build:win": "tauri build --runner cargo-xwin --target x86_64-pc-windows-msvc --bundles nsis",
+    "build:linux": "tauri build --bundles appimage",
+    "bundle-news": "node tools/bundle-news.mjs"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "2.12.4"
+  }
+}

@@ -1,0 +1,2 @@
+{"label": "final-0.2.0-focused", "procs": 3, "names": ["WebKitNetworkPr", "WebKitWebProces", "solfall-0.2.0-p"], "pss_mb_avg": 244.1, "pss_mb_max": 244.3, "rss_mb_avg": 429.2, "cpu_pct_1core": 7.8, "window_s": 30.0}
+{"label": "final-0.2.0-minimised", "procs": 3, "names": ["WebKitNetworkPr", "WebKitWebProces", "solfall-0.2.0-p"], "pss_mb_avg": 244.1, "pss_mb_max": 244.3, "rss_mb_avg": 429.2, "cpu_pct_1core": 0.0, "window_s": 20.0}

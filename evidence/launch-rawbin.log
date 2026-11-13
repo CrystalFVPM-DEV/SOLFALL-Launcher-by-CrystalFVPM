@@ -1,0 +1,6 @@
+
+(solfall-launcher:217984): dbind-WARNING **: 21:14:53.864: AT-SPI: Error retrieving accessibility bus address: org.freedesktop.DBus.Error.ServiceUnknown: The name org.a11y.Bus was not provided by any .service files
+[launch] navegando a https://play.solfall.online/
+WebKit wasn't able to find a WebVTT encoder. Subtitles handling will be degraded unless gst-plugins-bad is installed.
+GStreamer element fakevideosink not found. Please install it
+WebKit wasn't able to find a WebVTT encoder. Subtitles handling will be degraded unless gst-plugins-bad is installed.

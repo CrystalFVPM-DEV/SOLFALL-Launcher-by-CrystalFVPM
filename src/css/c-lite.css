@@ -1,0 +1,132 @@
+/* =====================================================================
+   c-lite.css — Reglas propias de la familia LITE de la Dirección C.
+   Cargar DESPUÉS de _tokens.css y c-system.css. Todo cuelga de .app.lite
+   (salvo .comms-strip / .lite-stack, que solo existen en lite).
+   ===================================================================== */
+/* =================== LITE =================== */
+.app.lite .lite-hero{left:40px;top:118px;width:620px}
+.app.lite .lite-hero .h1{font-size:68px;line-height:.95}
+.app.lite .lite-hero .lede{margin-top:16px;max-width:500px}
+.app.lite .pc{font:600 9px var(--f-display);letter-spacing:.2em;text-transform:uppercase;color:rgba(180,140,255,.55);margin-left:10px;vertical-align:top;position:relative;top:10px}
+.comms-strip{position:absolute;z-index:3;left:40px;bottom:302px;width:470px;display:flex;gap:14px;align-items:center;padding:10px 14px 10px 10px;
+  background:linear-gradient(90deg,rgba(46,26,12,.55),rgba(18,10,5,.25));backdrop-filter:blur(10px);border-left:2px solid var(--sun)}
+.comms-strip .ava{width:60px;height:60px;flex:none;overflow:hidden;position:relative;background:radial-gradient(circle at 70% 30%,rgba(255,170,60,.55),rgba(23,12,5,.92) 70%);
+  clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px)}
+.comms-strip .ava img{position:absolute;width:216px;left:-86px;top:-40px;image-rendering:pixelated}
+.comms-strip .said{font:400 19px/1.2 var(--f-body);color:var(--ink-2)}
+.comms-strip .said b{color:var(--sun-2);font-weight:400}
+/* marcas de esquina: secundarias en ámbar tenue, sin línea de corte */
+.app.lite .rcol .panel::after{opacity:.4;background:
+   linear-gradient(var(--sun),var(--sun)) top right/12px 1px no-repeat,linear-gradient(var(--sun),var(--sun)) top right/1px 12px no-repeat,
+   linear-gradient(var(--sun),var(--sun)) bottom left/12px 1px no-repeat,linear-gradient(var(--sun),var(--sun)) bottom left/1px 12px no-repeat}
+.app.lite .rcol .cutline{display:none}
+.app.lite .rcol .panel{--c:rgba(255,194,71,.55)}
+.app.lite .ptitle .r{opacity:.55}
+/* PH más discretos */
+.app.lite .ph{border-bottom:1px dashed rgba(180,140,255,.4)}
+.app.lite .ph::after{opacity:.4;font-size:7px}
+.app.lite .dock .tagp{opacity:.7}
+.app.lite .lite-hero{top:190px}
+.app.lite .lite-hero .h1{position:relative}
+.app.lite .pc{position:absolute;left:4px;top:-18px;margin:0;white-space:nowrap}
+.app.lite .canopy path:nth-child(1),.app.lite .canopy path:nth-child(3){display:none}
+
+/* --- Pila inferior izquierda: tira de Jamie + panel de lanzamiento (flex, crece hacia arriba) --- */
+.lite-stack{position:absolute;z-index:3;left:40px;bottom:92px;width:470px;display:flex;flex-direction:column;gap:14px}
+.lite-stack .comms-strip{position:relative;left:auto;bottom:auto;width:auto}
+.lite-stack .launchp{position:relative;left:auto;bottom:auto;width:auto}
+
+/* =====================================================================
+   FAMILIA lite v2 (direccion-c-lite-*). Todo cuelga de .app.lite.fam para no
+   alterar el histórico direccion-c-main-lite.html, que también carga este archivo.
+   ===================================================================== */
+
+/* ---------- Ventana ----------
+   Diseño a 1440×900; mínimo 1280×720. Paneles anclados a sus esquinas (rcol arriba-dcha,
+   hero arriba-izq, pila abajo-izq, barras arriba/abajo). Fondo en cover: la estrella se
+   ancla a la esquina inferior derecha. */
+.app.lite.fam{width:max(1280px,100vw);height:max(720px,100vh)}
+/* Estrella: pixel-art a factor entero (512 px × 3 = 1536 px), anclada abajo-dcha */
+.app.lite.fam .l-star{left:auto;top:auto;width:1536px;right:-516px;bottom:-786px}
+
+/* Wordmark vigente: branding/hero/logo.png (384×68, sin margen transparente).
+   Mismo alto visual que el legado logos/solfall.png a 34 px (≈ 21 px de letra). */
+.app.lite.fam .titlebar .wm{height:21px;width:auto;margin:0}
+
+/* ---------- Estados interactivos ----------
+   Aplican a: .launch (LAUNCH/RETRY), .sq, .btn2 (incl. "Restart to apply"), .chip, nav span, .wctl span, a
+   :hover          → filter brightness(1.08) + glow reforzado (CTA) / borde más claro (resto) / subrayado (a)
+   :active         → translateY(1px), SIN glow
+   :focus-visible  → anillo holo #5ce1ff de 2px que sigue el chaflán (pseudo ::before dentro del clip-path)
+   .off / [disabled] / [aria-disabled=true] → opacity .4 + rayado diagonal sutil + cursor not-allowed */
+.app.lite.fam :is(.launch,.sq,.btn2,.chip){position:relative}
+.app.lite.fam .launch{--fc:16px} .app.lite.fam .sq{--fc:10px} .app.lite.fam :is(.btn2,.chip){--fc:8px}
+.app.lite.fam :is(.launch,.sq,.btn2,.chip,.titlebar nav span,.wctl span,a){cursor:pointer;transition:filter .15s,box-shadow .15s,transform .08s,color .15s}
+/* hover */
+.app.lite.fam .launch:hover{filter:brightness(1.08);box-shadow:inset 0 0 22px rgba(255,231,173,.75)}
+.app.lite.fam .sq:hover{filter:brightness(1.08);box-shadow:inset 0 0 0 1px rgba(198,244,255,.85),0 0 16px rgba(92,225,255,.35)}
+.app.lite.fam .btn2:hover{filter:brightness(1.08);box-shadow:inset 0 0 0 1px rgba(198,244,255,.85)}
+.app.lite.fam .btn2.sun:hover{box-shadow:inset 0 0 0 1px rgba(255,231,173,.95),0 0 16px rgba(255,194,71,.45)}
+.app.lite.fam .chip:hover{filter:brightness(1.08);box-shadow:inset 0 0 0 1px rgba(255,231,173,.75)}
+.app.lite.fam .titlebar nav span:hover{color:var(--ink);box-shadow:inset 0 -1px 0 rgba(255,231,173,.6)}
+.app.lite.fam .wctl span:hover{color:var(--ink);box-shadow:inset 0 0 0 1px rgba(242,248,255,.35)}
+.app.lite.fam a:hover{text-decoration:underline;text-underline-offset:2px;filter:brightness(1.08)}
+/* active: baja 1px y apaga el glow */
+.app.lite.fam :is(.launch,.sq,.btn2,.chip,.titlebar nav span,.wctl span,a):active{transform:translateY(1px);filter:none}
+.app.lite.fam .launch:active{box-shadow:none}
+.app.lite.fam :is(.sq,.btn2,.chip):active{box-shadow:inset 0 0 0 1px rgba(92,225,255,.4)}
+/* focus-visible: anillo 2px #5ce1ff con 2px de offset que sigue el chaflán.
+   outline y los pseudos quedan recortados por el clip-path del control, así que en foco:
+   1) el control amplía su clip-path 4px hacia fuera (2px offset + 2px anillo),
+   2) su relleno/borde pasan a ::after con el chaflán original (--fill / --edge),
+   3) ::before (inset:-4px) pinta el anillo: lados con inset box-shadow, diagonales con gradientes.
+   --fc = tamaño del corte del control. 1.66px = 4px·(√2−1), desplazamiento del corte al crecer 4px. */
+.app.lite.fam .launch{--fill:linear-gradient(180deg,#ffd36e,var(--sun));--edge:none}
+.app.lite.fam .sq{--fill:rgba(92,225,255,.08);--edge:inset 0 0 0 1px rgba(92,225,255,.4)}
+.app.lite.fam .sq.sun{--fill:rgba(255,194,71,.10);--edge:inset 0 0 0 1px rgba(255,194,71,.55)}
+.app.lite.fam .btn2{--fill:transparent;--edge:inset 0 0 0 1px rgba(92,225,255,.4)}
+.app.lite.fam .btn2.sun{--fill:rgba(255,194,71,.10);--edge:inset 0 0 0 1px rgba(255,194,71,.6)}
+.app.lite.fam .chip{--fill:rgba(255,194,71,.04);--edge:inset 0 0 0 1px rgba(255,194,71,.22)}
+.app.lite.fam .chip.sun{--fill:rgba(255,194,71,.10);--edge:inset 0 0 0 1px rgba(255,194,71,.6)}
+.app.lite.fam :is(.launch,.sq,.btn2,.chip):focus-visible{outline:none;isolation:isolate;background:transparent;box-shadow:none;
+  clip-path:polygon(calc(var(--fc) - 1.66px) -4px,calc(100% + 4px) -4px,calc(100% + 4px) calc(100% - var(--fc) + 1.66px),calc(100% - var(--fc) + 1.66px) calc(100% + 4px),-4px calc(100% + 4px),-4px calc(var(--fc) - 1.66px))}
+.app.lite.fam :is(.launch,.sq,.btn2,.chip):focus-visible::after{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:var(--fill);box-shadow:var(--edge);
+  clip-path:polygon(var(--fc) 0,100% 0,100% calc(100% - var(--fc)),calc(100% - var(--fc)) 100%,0 100%,0 var(--fc))}
+.app.lite.fam :is(.launch,.sq,.btn2,.chip):focus-visible::before{content:'';position:absolute;inset:-4px;z-index:2;pointer-events:none;--rc:calc(var(--fc) + 2.34px);
+  box-shadow:inset 0 0 0 2px #5ce1ff;
+  background:
+   linear-gradient(135deg,transparent 50%,#5ce1ff 50%,#5ce1ff calc(50% + 2px),transparent calc(50% + 2px)) top left/var(--rc) var(--rc) no-repeat,
+   linear-gradient(315deg,transparent 50%,#5ce1ff 50%,#5ce1ff calc(50% + 2px),transparent calc(50% + 2px)) bottom right/var(--rc) var(--rc) no-repeat;
+  clip-path:polygon(var(--rc) 0,100% 0,100% calc(100% - var(--rc)),calc(100% - var(--rc)) 100%,0 100%,0 var(--rc))}
+.app.lite.fam :is(.titlebar nav span,.wctl span,a):focus-visible{outline:2px solid #5ce1ff;outline-offset:2px}
+/* deshabilitado */
+.app.lite.fam :is(.launch,.sq,.btn2,.chip,a):is(.off,[disabled],[aria-disabled="true"]){opacity:.4;box-shadow:none;filter:none;cursor:not-allowed;transform:none;text-decoration:none}
+.app.lite.fam :is(.launch,.sq,.btn2,.chip):is(.off,[disabled],[aria-disabled="true"])::after{content:'';position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(135deg,rgba(242,248,255,.07) 0 6px,transparent 6px 12px)}
+.app.lite.fam .launch.off{background:rgba(117,142,161,.16)}
+
+/* ---------- Update bloqueante: spinner en el .sq + enlace Cancel ---------- */
+.app.lite.fam .sq.busy{cursor:progress}
+.spin{width:26px;height:26px;position:relative;animation:spin 1s steps(8) infinite}
+.spin i{position:absolute;left:11px;top:0;width:4px;height:7px;background:var(--holo);transform-origin:2px 13px;opacity:.25}
+.spin i:nth-child(1){transform:rotate(0deg);opacity:1}
+.spin i:nth-child(2){transform:rotate(45deg);opacity:.85}
+.spin i:nth-child(3){transform:rotate(90deg);opacity:.7}
+.spin i:nth-child(4){transform:rotate(135deg);opacity:.55}
+.spin i:nth-child(5){transform:rotate(180deg);opacity:.4}
+.spin i:nth-child(6){transform:rotate(225deg)}
+.spin i:nth-child(7){transform:rotate(270deg)}
+.spin i:nth-child(8){transform:rotate(315deg)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.app.lite.fam .cancel{color:var(--ink-3);text-decoration:none;margin-left:14px;font:600 13px var(--f-display);letter-spacing:.14em;text-transform:uppercase}
+.app.lite.fam .cancel:hover{color:var(--ink);text-decoration:underline}
+.app.lite.fam .lu-notes{margin-top:10px;font:400 16px var(--f-body);color:var(--ink-3);white-space:nowrap}
+.app.lite.fam .lu-links{display:flex;justify-content:flex-end;align-items:center;margin:4px 0 12px;font:600 13px var(--f-display);letter-spacing:.14em;text-transform:uppercase}
+.app.lite.fam .lu-links .wn{color:var(--holo);text-decoration:none}
+/* Ventana baja (mín. 720 px de alto): el hero sube y reduce el titular para no chocar con la pila inferior */
+@media (max-height:820px){
+  .app.lite.fam .lite-hero{top:92px}
+  .app.lite.fam .lite-hero .h1{font-size:54px}
+  .app.lite.fam .lite-hero .lede{margin-top:10px;font-size:19px}
+}

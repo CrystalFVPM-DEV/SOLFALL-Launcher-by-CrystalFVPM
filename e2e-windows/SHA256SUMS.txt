@@ -1,0 +1,4 @@
+bdb404d0c50fcc01be994c95f7d45fd5349a4a18e3c9291506b1b4448ce37bbb  installers/0.2.1/SolfallLauncher_0.2.1_x64-setup.exe
+b49903766924c421072511fac9844193764ec888cfba201ca410de32974c980d  installers/0.2.1/SolfallLauncher_0.2.1_x64-setup.exe.sig
+62e376d7309520ba0fd059591637222246d41f76cb95a5e1d7be5221183cfbfd  installers/0.2.2/SolfallLauncher_0.2.2_x64-setup.exe
+5d683a93bbf038849b46e02983a9725bd7dd842ddfe5b709626259a246a81c1b  installers/0.2.2/SolfallLauncher_0.2.2_x64-setup.exe.sig

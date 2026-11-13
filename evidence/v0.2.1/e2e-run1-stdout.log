@@ -1,0 +1,32 @@
+==== SOLFALL Launcher 0.2.1 start (linux x86_64) args=[]
+[env] webview runtime=2.54.0
+[env] browser args="--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection,Translate,AutofillServerCommunication --autoplay-policy=no-user-gesture-required" (identical for every webview)
+[env] data dir=/workspace/solfall-launcher/e2e/v0.2.1/profile/data/online.solfall.launcher (WebView2 adds EBWebView\)
+[env] updater endpoints=["http://127.0.0.1:8788/CrystalFVPM-DEV/SOLFALL-Launcher-by-CrystalFVPM/releases/latest/download/latest.json"] pubkey=TEST-ONLY (B8AC8CD75A1001F5)
+[env] settings on_launch=replace close_action=quit rev=2
+[page] main started tauri://localhost
+[ui] music error 4
+[page] main finished tauri://localhost
+[ui] state main
+[ui] update check available=true version=0.2.2
+[ui] state launcher-update
+[news] GET https://raw.githubusercontent.com/CrystalFVPM-DEV/SOLFALL-Launcher-by-CrystalFVPM/main/content/news.json -> 404
+[ui] news source=bundled items=6 (HTTP 404)
+[updater] download complete: 192502264 bytes, signature verified OK (minisign)
+[ui] state main ready
+[ui] state update ready
+[updater] installing 0.2.2 ...
+[updater] installed; restarting
+==== SOLFALL Launcher 0.2.2 start (linux x86_64) args=[]
+[env] webview runtime=2.54.0
+[env] browser args="--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection,Translate,AutofillServerCommunication --autoplay-policy=no-user-gesture-required" (identical for every webview)
+[env] data dir=/workspace/solfall-launcher/e2e/v0.2.1/profile/data/online.solfall.launcher (WebView2 adds EBWebView\)
+[env] updater endpoints=["http://127.0.0.1:8788/CrystalFVPM-DEV/SOLFALL-Launcher-by-CrystalFVPM/releases/latest/download/latest.json"] pubkey=TEST-ONLY (B8AC8CD75A1001F5)
+[env] settings on_launch=replace close_action=quit rev=2
+[page] main started tauri://localhost
+[ui] music error 4
+[page] main finished tauri://localhost
+[ui] state main
+[ui] update check available=false
+[news] GET https://raw.githubusercontent.com/CrystalFVPM-DEV/SOLFALL-Launcher-by-CrystalFVPM/main/content/news.json -> 404
+[ui] news source=bundled items=6 (HTTP 404)

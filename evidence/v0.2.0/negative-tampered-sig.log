@@ -1,0 +1,8 @@
+[ui] music error 4
+[ui] music: using blob fallback
+[ui] state main
+[ui] update check available=true version=0.2.1
+[ui] state launcher-update
+[ui] news source=network items=2 SAMPLE
+[updater] ERROR in download/verification: The signature verification failed
+[ui] state main notice=Update rejected (invalid signature)

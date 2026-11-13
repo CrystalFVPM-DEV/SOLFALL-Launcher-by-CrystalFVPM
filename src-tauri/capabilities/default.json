@@ -1,0 +1,6 @@
+{
+  "identifier": "default",
+  "description": "Only the LOCAL launcher UI may invoke commands. The remote game page has no IPC permissions (no 'remote' entry).",
+  "windows": ["main"],
+  "permissions": ["core:default", "core:window:allow-start-dragging", "core:window:allow-internal-toggle-maximize"]
+}

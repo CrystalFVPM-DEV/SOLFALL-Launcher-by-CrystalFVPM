@@ -1,0 +1,4 @@
+icon: FINAL      /workspace/solfall/spec/icon/solfall-icon-1024.png
+header: FINAL      /workspace/solfall/spec/installer/header.bmp
+sidebar: FINAL      /workspace/solfall/spec/installer/sidebar.bmp
+ico: FINAL      /workspace/solfall/spec/icon/solfall.ico (verbatim, overwrites tauri icon output)

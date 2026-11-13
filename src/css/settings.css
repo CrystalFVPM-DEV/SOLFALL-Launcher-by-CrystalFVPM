@@ -1,0 +1,150 @@
+/* =====================================================================
+   (Copied verbatim from /workspace/solfall/spec/settings/settings.css — Lead UI/UX. Motion overrides live in launcher.css.)
+   settings.css — Launcher 0.1.0 · Settings view + frameless title bar.
+   Load AFTER ../../references/mockups/_tokens.css, c-system.css, c-lite.css.
+   Everything hangs off .app.lite.fam (same family as direccion-c-lite-*).
+   Interaction pattern = c-lite.css (Product): hover brightness(1.08)+glow ·
+   :active translateY(1px) no glow · :focus-visible 2px #5ce1ff ring, 2px offset ·
+   disabled opacity .4 + stripes + not-allowed.
+   ===================================================================== */
+.app.lite.fam{--row-h:56px;--ctl-h:36px;--wc-w:46px}
+
+/* ---------- Title bar: window controls (frameless, HTML) ---------- */
+.app.lite.fam .titlebar{padding-right:0}
+.app.lite.fam .titlebar .wctl{gap:4px;margin-right:6px}            /* ♪ ⚙ keep 34×30 (existing) */
+.app.lite.fam .wctl span.on{color:var(--sun-2);box-shadow:inset 0 -2px 0 var(--sun);background:rgba(255,194,71,.10)}
+.app.lite.fam .wsep{width:1px;height:22px;background:rgba(255,194,71,.22);margin:0 2px 0 0}
+.app.lite.fam .wc{display:flex;height:52px;align-self:stretch}
+.app.lite.fam .wc button{all:unset;box-sizing:border-box;width:var(--wc-w);height:52px;display:grid;place-items:center;color:var(--ink-3);cursor:pointer;position:relative;
+  transition:background-color .12s,color .12s,transform .08s}
+.app.lite.fam .wc svg{width:12px;height:12px;shape-rendering:crispEdges;display:block}
+.app.lite.fam .wc svg rect{fill:currentColor}
+/* hover */
+.app.lite.fam .wc button:hover,.app.lite.fam .wc button.is-hover{background:rgba(242,248,255,.10);color:var(--ink)}
+.app.lite.fam .wc button.close:hover,.app.lite.fam .wc button.close.is-hover{background:#ff6b7a;color:#05070d}
+/* press: 1px down, no glow; close a step darker */
+.app.lite.fam .wc button:active,.app.lite.fam .wc button.is-press{background:rgba(242,248,255,.06);color:var(--ink)}
+.app.lite.fam .wc button:active svg,.app.lite.fam .wc button.is-press svg{transform:translateY(1px)}
+.app.lite.fam .wc button.close:active,.app.lite.fam .wc button.close.is-press{background:#e2566a;color:#05070d}
+/* focus-visible: 2px #5ce1ff ring, 2px gap — drawn INSIDE the 46×52 cell (outline-offset:-4px)
+   because the cell is flush with the window edge and an outer offset would be clipped. */
+.app.lite.fam .wc button:focus-visible,.app.lite.fam .wc button.is-focus{outline:2px solid #5ce1ff;outline-offset:-4px;color:var(--ink)}
+/* maximised: icon swap is in the markup (max ↔ restore); window loses its 1px frame */
+.win-frame{box-shadow:0 0 0 1px rgba(255,194,71,.28),0 24px 60px rgba(0,0,0,.6)}
+.win-frame.max{box-shadow:none}
+
+/* ---------- Settings view ---------- */
+.app.lite.fam .set-scrim{position:absolute;inset:0;z-index:2;background:linear-gradient(90deg,rgba(11,6,3,.78),rgba(11,6,3,.55) 60%,rgba(11,6,3,.70));pointer-events:none}
+.app.lite.fam .set{position:absolute;z-index:3;left:40px;right:40px;top:76px;bottom:84px;display:flex;flex-direction:column;gap:16px}
+.app.lite.fam .set-head{display:flex;align-items:center;gap:18px;height:44px}
+.app.lite.fam .set-head .h1{font-size:40px;line-height:1}
+.app.lite.fam .set-head .kicker{color:var(--sun)}
+.app.lite.fam .set-head .saved{margin-left:auto;font:400 17px var(--f-body);color:var(--ink-3)}
+.app.lite.fam .set-head .saved b{color:var(--ok);font-weight:400}
+.app.lite.fam .set-grid{flex:1;display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;min-height:0}
+.app.lite.fam .set-col{display:flex;flex-direction:column;gap:20px;min-height:0}
+.app.lite.fam .set .panel{position:relative;left:auto;top:auto;padding:16px 20px 6px}
+.app.lite.fam .set .panel.grow{flex:1}
+.app.lite.fam .set .panel .ptitle{margin-bottom:4px}
+/* secondary panels: faint amber HUD marks, no cutline (same as lite .rcol) */
+.app.lite.fam .set .panel{--c:rgba(255,194,71,.55)}
+.app.lite.fam .set .panel::after{opacity:.4;background:
+   linear-gradient(var(--sun),var(--sun)) top right/12px 1px no-repeat,linear-gradient(var(--sun),var(--sun)) top right/1px 12px no-repeat,
+   linear-gradient(var(--sun),var(--sun)) bottom left/12px 1px no-repeat,linear-gradient(var(--sun),var(--sun)) bottom left/1px 12px no-repeat}
+.app.lite.fam .set .panel.prime{--c:var(--holo)}
+.app.lite.fam .set .panel.prime::after{opacity:.9;inset:-5px;background:
+   linear-gradient(var(--c),var(--c)) top right/14px 2px no-repeat,linear-gradient(var(--c),var(--c)) top right/2px 14px no-repeat,
+   linear-gradient(var(--c),var(--c)) bottom left/14px 2px no-repeat,linear-gradient(var(--c),var(--c)) bottom left/2px 14px no-repeat}
+
+/* setting row: label + hint left, control right */
+.app.lite.fam .srow{min-height:var(--row-h);display:flex;align-items:center;gap:16px;padding:9px 0;border-top:1px solid rgba(255,194,71,.10)}
+.app.lite.fam .srow:first-of-type{border-top:0}
+.app.lite.fam .srow .lab{flex:1;min-width:0}
+.app.lite.fam .srow .lab b{display:block;font:400 19px/1.15 var(--f-body);color:var(--ink)}
+.app.lite.fam .srow .lab small{display:block;font:400 15px/1.2 var(--f-body);color:var(--ink-3);margin-top:2px}
+.app.lite.fam .srow.sub{padding-left:18px;border-top:0;min-height:44px;margin-top:-6px;position:relative}
+.app.lite.fam .srow.sub::before{content:'';position:absolute;left:4px;top:4px;width:8px;height:16px;border-left:1px solid rgba(255,194,71,.3);border-bottom:1px solid rgba(255,194,71,.3)}
+.app.lite.fam .srow.stack{flex-direction:column;align-items:stretch;gap:8px}
+.app.lite.fam .kv{display:flex;justify-content:space-between;font:600 14px var(--f-display);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);padding:5px 0}
+.app.lite.fam .kv b{color:var(--ink);font-weight:600}
+.app.lite.fam .kv .num{font-size:15px}
+
+/* ---------- Toggle 44×24 ---------- */
+.app.lite.fam .tgl{all:unset;box-sizing:border-box;flex:none;width:44px;height:24px;position:relative;cursor:pointer;--fc:6px;
+  --fill:rgba(117,142,161,.16);--edge:inset 0 0 0 1px rgba(117,142,161,.55);background:var(--fill);box-shadow:var(--edge);
+  clip-path:polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px);transition:filter .15s,box-shadow .15s,transform .08s}
+.app.lite.fam .tgl i{position:absolute;left:4px;top:4px;width:16px;height:16px;background:var(--ink-3);transition:left .12s steps(3)}
+.app.lite.fam .tgl[aria-checked="true"]{--fill:rgba(92,225,255,.18);--edge:inset 0 0 0 1px rgba(92,225,255,.65)}
+.app.lite.fam .tgl[aria-checked="true"] i{left:24px;background:var(--holo);box-shadow:0 0 8px rgba(92,225,255,.7)}
+.app.lite.fam .tgl:hover,.app.lite.fam .tgl.is-hover{filter:brightness(1.08);box-shadow:inset 0 0 0 1px rgba(198,244,255,.85),0 0 12px rgba(92,225,255,.3)}
+.app.lite.fam .tgl:active,.app.lite.fam .tgl.is-press{transform:translateY(1px);filter:none;box-shadow:var(--edge)}
+
+/* ---------- Select (closed) 36 high, chamfer 8 ---------- */
+.app.lite.fam .sel{all:unset;box-sizing:border-box;flex:none;height:var(--ctl-h);min-width:180px;padding:0 36px 0 12px;display:flex;align-items:center;position:relative;cursor:pointer;--fc:8px;
+  font:400 18px var(--f-body);color:var(--ink);--fill:rgba(12,19,30,.6);--edge:inset 0 0 0 1px rgba(92,225,255,.4);background:var(--fill);box-shadow:var(--edge);
+  clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);transition:filter .15s,box-shadow .15s,transform .08s}
+.app.lite.fam .sel svg{position:absolute;right:12px;top:13px;width:10px;height:10px;shape-rendering:crispEdges}
+.app.lite.fam .sel svg rect{fill:var(--holo)}
+.app.lite.fam .sel:hover,.app.lite.fam .sel.is-hover{filter:brightness(1.08);box-shadow:inset 0 0 0 1px rgba(198,244,255,.85)}
+.app.lite.fam .sel:active,.app.lite.fam .sel.is-press{transform:translateY(1px);filter:none;box-shadow:inset 0 0 0 1px rgba(92,225,255,.4)}
+.app.lite.fam .sel[aria-expanded="true"]{box-shadow:inset 0 0 0 1px rgba(198,244,255,.85)}
+/* listbox */
+.app.lite.fam .lbx{position:absolute;z-index:6;min-width:200px;padding:4px;background:rgba(10,7,5,.96);box-shadow:inset 0 0 0 1px rgba(92,225,255,.45),0 18px 40px rgba(0,0,0,.6);
+  clip-path:polygon(0 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%)}
+.app.lite.fam .lbx div{height:34px;display:flex;align-items:center;gap:10px;padding:0 10px;font:400 18px var(--f-body);color:var(--ink-2)}
+.app.lite.fam .lbx div.act{background:rgba(92,225,255,.12);color:var(--ink)}
+.app.lite.fam .lbx div[aria-selected="true"]::before{content:'';width:6px;height:6px;background:var(--holo)}
+.app.lite.fam .lbx div:not([aria-selected="true"])::before{content:'';width:6px;height:6px}
+
+/* ---------- Segmented (2–4 options), 36 high ---------- */
+.app.lite.fam .seg{display:flex;flex:none;height:var(--ctl-h);box-shadow:inset 0 0 0 1px rgba(92,225,255,.4);background:rgba(12,19,30,.6);
+  clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);padding:3px;gap:3px}
+.app.lite.fam .seg button{all:unset;box-sizing:border-box;padding:0 12px;display:grid;place-items:center;font:600 13px var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);cursor:pointer;transition:filter .15s,transform .08s}
+.app.lite.fam .seg button[aria-checked="true"]{background:rgba(92,225,255,.16);color:var(--holo-2);box-shadow:inset 0 -2px 0 var(--holo)}
+.app.lite.fam .seg button:hover,.app.lite.fam .seg button.is-hover{color:var(--ink);filter:brightness(1.08)}
+.app.lite.fam .seg button:active{transform:translateY(1px)}
+.app.lite.fam .seg button:focus-visible,.app.lite.fam .seg button.is-focus{outline:2px solid #5ce1ff;outline-offset:-2px}
+
+/* ---------- Slider: 4px track, 12×20 thumb, Doto readout ---------- */
+.app.lite.fam .sld{flex:none;width:180px;height:24px;position:relative;cursor:pointer;--v:50%}
+.app.lite.fam .sld::before{content:'';position:absolute;left:0;right:0;top:10px;height:4px;background:rgba(117,142,161,.28)}
+.app.lite.fam .sld::after{content:'';position:absolute;left:0;width:var(--v);top:10px;height:4px;background:var(--holo);box-shadow:0 0 8px rgba(92,225,255,.5)}
+.app.lite.fam .sld i{position:absolute;z-index:1;left:calc(var(--v) - 6px);top:2px;width:12px;height:20px;background:var(--holo-2);box-shadow:inset 0 0 0 1px #05070d;
+  transition:transform .08s}   /* square thumb: no clip-path, so the focus outline isn't clipped */
+.app.lite.fam .sld:hover i,.app.lite.fam .sld.is-hover i{filter:brightness(1.08);box-shadow:inset 0 0 0 1px #05070d,0 0 10px rgba(92,225,255,.8)}
+.app.lite.fam .sld.is-press i,.app.lite.fam .sld:active i{transform:translateY(1px);filter:none}
+.app.lite.fam .sld:focus-visible,.app.lite.fam .sld.is-focus{outline:none}
+.app.lite.fam .sld:focus-visible i,.app.lite.fam .sld.is-focus i{outline:2px solid #5ce1ff;outline-offset:2px}
+.app.lite.fam .sval{flex:none;width:34px;text-align:right;font:700 15px var(--f-num);color:var(--holo);letter-spacing:.04em}
+
+/* ---------- focus ring for toggle/select (chamfer-following, same technique as c-lite.css) ---------- */
+.app.lite.fam :is(.tgl,.sel):is(:focus-visible,.is-focus){isolation:isolate;background:transparent;box-shadow:none;
+  clip-path:polygon(calc(var(--fc) - 1.66px) -4px,calc(100% + 4px) -4px,calc(100% + 4px) calc(100% - var(--fc) + 1.66px),calc(100% - var(--fc) + 1.66px) calc(100% + 4px),-4px calc(100% + 4px),-4px calc(var(--fc) - 1.66px))}
+.app.lite.fam :is(.tgl,.sel):is(:focus-visible,.is-focus)::after{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;background:var(--fill);box-shadow:var(--edge);
+  clip-path:polygon(var(--fc) 0,100% 0,100% calc(100% - var(--fc)),calc(100% - var(--fc)) 100%,0 100%,0 var(--fc))}
+.app.lite.fam :is(.tgl,.sel):is(:focus-visible,.is-focus)::before{content:'';position:absolute;inset:-4px;z-index:2;pointer-events:none;--rc:calc(var(--fc) + 2.34px);
+  box-shadow:inset 0 0 0 2px #5ce1ff;
+  background:linear-gradient(135deg,transparent 50%,#5ce1ff 50%,#5ce1ff calc(50% + 2px),transparent calc(50% + 2px)) top left/var(--rc) var(--rc) no-repeat,
+   linear-gradient(315deg,transparent 50%,#5ce1ff 50%,#5ce1ff calc(50% + 2px),transparent calc(50% + 2px)) bottom right/var(--rc) var(--rc) no-repeat;
+  clip-path:polygon(var(--rc) 0,100% 0,100% calc(100% - var(--rc)),calc(100% - var(--rc)) 100%,0 100%,0 var(--rc))}
+.app.lite.fam .tgl:is(:focus-visible,.is-focus) i{z-index:1}
+.app.lite.fam .sel:is(:focus-visible,.is-focus) svg{z-index:1}
+
+/* ---------- disabled (any control) ---------- */
+.app.lite.fam :is(.tgl,.sel,.seg,.sld,.btn2):is([disabled],[aria-disabled="true"],.off){opacity:.4;filter:none;cursor:not-allowed;transform:none}
+.app.lite.fam :is(.tgl,.sel,.seg,.btn2):is([disabled],[aria-disabled="true"],.off)::after{content:'';position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(135deg,rgba(242,248,255,.07) 0 6px,transparent 6px 12px)}
+.app.lite.fam .sld:is([aria-disabled="true"],.off)::after{background:var(--ink-3);box-shadow:none}
+.app.lite.fam .sld:is([aria-disabled="true"],.off) i{background:var(--ink-3)}
+.app.lite.fam .srow.dis .lab{opacity:.4}
+.app.lite.fam .seg{position:relative}
+
+/* buttons/links reused: .btn2 (c-system/c-lite), .btn2.sm; links → holo */
+.app.lite.fam .set a{color:var(--holo);text-decoration:none;font:600 13px var(--f-display);letter-spacing:.14em;text-transform:uppercase}
+.app.lite.fam .set .btn2{position:relative}
+.app.lite.fam button.btn2{appearance:none;border:0;background:var(--fill,transparent);cursor:pointer}
+.app.lite.fam button.btn2.sun{background:rgba(255,194,71,.10)}
+.app.lite.fam .tray{margin-top:auto;margin-bottom:12px;padding:10px 12px;border:1px dashed rgba(255,194,71,.25);font:400 15px/1.3 var(--f-body);color:var(--ink-3)}
+.app.lite.fam .tray b{display:block;font:600 12px var(--f-display);letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3);margin-bottom:4px}
+.app.lite.fam .tray span{color:var(--ink-2)}
+.app.lite.fam .set .panel.grow{display:flex;flex-direction:column}

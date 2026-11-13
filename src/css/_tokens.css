@@ -1,0 +1,26 @@
+/* Tokens copiados del sitio público solfall.online (js/light.js, capa ui2). */
+@font-face{font-family:'Handjet';src:url('../assets/handjet.woff2') format('woff2');font-weight:400 800}
+@font-face{font-family:'Jersey 20';src:url('../assets/jersey20.woff2') format('woff2')}
+@font-face{font-family:'Doto';src:url('../assets/doto.woff2') format('woff2');font-weight:600 900}
+:root{
+  --void:#05070d; --deep:#0a1019; --glass:rgba(12,19,30,.78); --glass-2:rgba(8,13,22,.86);
+  --holo:#5ce1ff; --holo-2:#c6f4ff; --holo-dim:rgba(92,225,255,.35); --holo-pool:rgba(92,225,255,.12);
+  --sun:#ffc247; --sun-2:#ffe7ad; --sun-ink:#2a1600; --sun-pool:rgba(255,194,71,.14);
+  --ink:#f2f8ff; --ink-2:#b7c9d8; --ink-3:#758ea1; --ok:#7cf5a2; --bad:#ff6b7a; --violet:#b48cff;
+  --cut:15px; --bw:3px;
+  --f-display:'Handjet',sans-serif; --f-body:'Jersey 20',sans-serif; --f-num:'Doto',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#000;width:100%;height:100%}
+body{display:grid;place-items:center;font-family:var(--f-body);color:var(--ink);-webkit-font-smoothing:auto}
+img{image-rendering:pixelated}
+.chamfer{clip-path:polygon(var(--cut) 0,100% 0,100% calc(100% - var(--cut)),calc(100% - var(--cut)) 100%,0 100%,0 var(--cut))}
+.stars{position:absolute;inset:0;background:
+ radial-gradient(1px 1px at 12% 18%,#fff8 50%,transparent 51%),radial-gradient(1px 1px at 33% 72%,#fff6 50%,transparent 51%),
+ radial-gradient(2px 2px at 57% 12%,#c6f4ffaa 50%,transparent 51%),radial-gradient(1px 1px at 78% 44%,#fff7 50%,transparent 51%),
+ radial-gradient(1px 1px at 91% 81%,#fff5 50%,transparent 51%),radial-gradient(2px 2px at 22% 48%,#ffe7ad88 50%,transparent 51%),
+ radial-gradient(1px 1px at 66% 90%,#fff6 50%,transparent 51%),radial-gradient(1px 1px at 45% 33%,#fff4 50%,transparent 51%),
+ radial-gradient(1px 1px at 5% 92%,#fff5 50%,transparent 51%),radial-gradient(1px 1px at 86% 8%,#fff6 50%,transparent 51%);
+ background-size:420px 300px}
+.scan{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(255,255,255,.025) 0 1px,transparent 1px 3px)}
+.note{position:fixed;left:8px;bottom:6px;font:12px/1.2 monospace;color:#6d90a3}

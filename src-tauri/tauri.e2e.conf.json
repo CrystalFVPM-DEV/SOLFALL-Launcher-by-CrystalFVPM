@@ -1,0 +1,16 @@
+{
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "http://127.0.0.1:8788/CrystalFVPM-DEV/SOLFALL-Launcher-by-CrystalFVPM/releases/latest/download/latest.json"
+      ],
+      "dangerousInsecureTransportProtocol": true,
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEI4QUM4Q0Q3NUExMDAxRjUKUldUMUFSQmExNHlzdUpxWDNyaUN0aXNnZnd1QVRVN2pRK3hJWGJaK2dyNWwxaTM5TitKOGZraWcK"
+    }
+  },
+  "app": {
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://solfall.online https://raw.githubusercontent.com; media-src 'self' blob:; font-src 'self'; connect-src ipc: http://ipc.localhost 'self' https://raw.githubusercontent.com https://play.solfall.online https://solfall.example http://127.0.0.1:8787"
+    }
+  }
+}

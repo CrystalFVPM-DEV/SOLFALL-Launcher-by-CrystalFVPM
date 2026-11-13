@@ -1,0 +1,8 @@
+/users/box/AppData/Roaming/Microsoft/Windows/Start Menu/Programs/SOLFALL.lnk
+  target   : C:\users\box\AppData\Local\SolfallLauncher\solfall-launcher.exe
+  icon     : C:\users\box\AppData\Local\SolfallLauncher\solfall.ico index 0
+  workdir  : C:\users\box\AppData\Local\SolfallLauncher
+/users/box/Desktop/SOLFALL.lnk
+  target   : C:\users\box\AppData\Local\SolfallLauncher\solfall-launcher.exe
+  icon     : C:\users\box\AppData\Local\SolfallLauncher\solfall.ico index 0
+  workdir  : C:\users\box\AppData\Local\SolfallLauncher

@@ -1,0 +1,16 @@
+[ui] music error 4
+[ui] music: using blob fallback
+[ui] state main
+[ui] update check available=true version=0.2.1
+[ui] state launcher-update
+[ui] news source=network items=2 SAMPLE
+[updater] download complete: 192485880 bytes, signature verified OK (minisign)
+[ui] state main ready
+[ui] state update ready
+[updater] installing 0.2.1 ...
+[updater] installed; restarting
+[ui] music error 4
+[ui] music: using blob fallback
+[ui] state main
+[ui] update check available=false
+[ui] news source=not-modified items=2 SAMPLE

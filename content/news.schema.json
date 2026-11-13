@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/CrystalFVPM-DEV/SOLFALL-Launcher-by-CrystalFVPM/main/content/news.schema.json",
+  "title": "SOLFALL Launcher news (content/news.json)",
+  "description": "Hand-edited from the GitHub web UI. See docs/CONTENT-GUIDE.md. Empty sections (null or []) are hidden by the launcher.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "updated", "featured", "roadmap", "patch_notes"],
+  "properties": {
+    "$schema": { "type": "string", "description": "Optional editor hint. Ignored by the launcher." },
+    "schema_version": { "const": 3, "description": "Always 3 for this format." },
+    "updated": { "$ref": "#/$defs/date", "description": "Day you last edited this file (YYYY-MM-DD)." },
+    "links": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Buttons/links in the launcher. null = hidden.",
+      "properties": {
+        "roadmap": { "$ref": "#/$defs/urlOrNull" },
+        "patch_notes": { "$ref": "#/$defs/urlOrNull" },
+        "website": { "$ref": "#/$defs/urlOrNull" },
+        "patreon": { "$ref": "#/$defs/urlOrNull" },
+        "discord": { "$ref": "#/$defs/urlOrNull" }
+      }
+    },
+    "featured": {
+      "description": "Big card on the main screen. null = hidden.",
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["title", "text"],
+          "properties": {
+            "title": { "type": "string", "minLength": 1, "maxLength": 60 },
+            "text": { "type": "string", "minLength": 1, "maxLength": 280 },
+            "status": { "$ref": "#/$defs/status" },
+            "url": { "$ref": "#/$defs/urlOrNull" },
+            "image": { "$ref": "#/$defs/urlOrNull", "description": "https image URL (solfall.online or raw.githubusercontent.com/.../content/img/...). Optional." },
+            "source": { "$ref": "#/$defs/url" }
+          }
+        }
+      ]
+    },
+    "roadmap": {
+      "type": "array",
+      "maxItems": 6,
+      "description": "Roadmap rows, in display order. The launcher shows the first 3. [] = hidden.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["title", "status"],
+        "properties": {
+          "title": { "type": "string", "minLength": 1, "maxLength": 40 },
+          "status": { "$ref": "#/$defs/status" },
+          "when": { "type": "string", "maxLength": 20 },
+          "source": { "$ref": "#/$defs/url" }
+        }
+      }
+    },
+    "patch_notes": {
+      "type": "array",
+      "maxItems": 20,
+      "description": "Newest first. The newest one feeds 'Last update <date> · <title>'. [] = hidden.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["date", "title"],
+        "properties": {
+          "date": { "$ref": "#/$defs/date" },
+          "kind": { "enum": ["FEATURE", "FIX", "BALANCE", "HOTFIX", "ART"] },
+          "title": { "type": "string", "minLength": 1, "maxLength": 80 },
+          "summary": { "type": "array", "maxItems": 3, "items": { "type": "string", "minLength": 1, "maxLength": 400 } },
+          "url": { "$ref": "#/$defs/urlOrNull" },
+          "source": { "$ref": "#/$defs/url" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "status": { "enum": ["done", "in_progress", "next_up", "planned"] },
+    "date": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+    "url": { "type": "string", "pattern": "^https://[^\\s]+$" },
+    "urlOrNull": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/url" }] }
+  }
+}

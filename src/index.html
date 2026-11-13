@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>SOLFALL</title>
+<!-- Local launcher UI (Direction C "Lite", v2 WARM). Solfall assets, logo and music are property of their owners
+     and used with permission; not covered by the Apache-2.0 license. -->
+<link rel="stylesheet" href="css/_tokens.css">
+<link rel="stylesheet" href="css/c-system.css">
+<link rel="stylesheet" href="css/c-lite.css">
+<link rel="stylesheet" href="css/settings.css">
+<link rel="stylesheet" href="css/launcher.css">
+</head>
+<body>
+<div class="app lite fam" id="app" data-state="main" data-focused="true">
+  <div class="l-sky"></div><div class="l-stars stars"></div>
+  <img class="l-star-shadow" src="assets/star-shadow.png" alt="" aria-hidden="true">
+  <img class="l-star" src="assets/star-warm.png" alt="">
+  <div class="l-star-glow" aria-hidden="true"></div>
+  <div class="l-flare"></div>
+  <img class="rock far drift" style="left:600px;top:120px;width:60px;--r:20deg" src="assets/rock4.png" alt="">
+  <img class="rock far" style="left:1010px;top:560px;width:50px" src="assets/rock6.png" alt="">
+  <img class="rock drift" style="left:880px;top:180px;width:162px;--r:-15deg" src="assets/rock3.png" alt="">
+  <img class="rock near" style="left:-150px;top:330px;width:230px;transform:rotate(25deg)" src="assets/rock5.png" alt="">
+  <div class="vign"></div>
+  <svg class="canopy" viewBox="0 0 1440 900" preserveAspectRatio="none">
+    <path d="M0 52 L210 52 L150 140 L0 210 Z" fill="rgba(5,7,13,.55)"/>
+    <path d="M1440 52 L1230 52 L1290 140 L1440 210 Z" fill="rgba(5,7,13,.55)"/>
+    <path d="M210 52 L150 140 L0 210" stroke="rgba(92,225,255,.22)" stroke-width="1.5" fill="none"/>
+    <path d="M1230 52 L1290 140 L1440 210" stroke="rgba(92,225,255,.22)" stroke-width="1.5" fill="none"/>
+    <path d="M560 840 L640 800 L800 800 L880 840" stroke="rgba(255,194,71,.25)" stroke-width="1.5" fill="none"/>
+  </svg>
+
+  <header class="titlebar" data-tauri-drag-region>
+    <img class="wm" src="assets/logo.png" alt="SOLFALL" data-tauri-drag-region>
+    <nav><span class="on" tabindex="0" id="nPlay">Play</span><span tabindex="0" data-link="roadmap" id="nRoadmap" hidden>Roadmap</span></nav>
+    <div class="sp" data-tauri-drag-region></div>
+    <div class="pill" id="pill"><i class="dot"></i><span id="pillText">Checking galaxy…</span></div>
+    <div class="wctl">
+      <span id="wSound" role="button" tabindex="0" title="Music">♪</span>
+      <span id="wSettings" role="button" tabindex="0" title="Settings" aria-controls="settings">⚙</span>
+    </div>
+    <i class="wsep"></i>
+    <div class="wc">
+      <button class="min" id="wMin" type="button" aria-label="Minimise" title="Minimise"><svg viewBox="0 0 12 12" aria-hidden="true"><rect x="1" y="9" width="10" height="2"/></svg></button>
+      <button class="max" id="wMax" type="button" aria-label="Maximise" title="Maximise (F11: full screen)"><svg viewBox="0 0 12 12" aria-hidden="true"><rect x="1" y="1" width="10" height="3"/><rect x="1" y="1" width="2" height="10"/><rect x="9" y="1" width="2" height="10"/><rect x="1" y="9" width="10" height="2"/></svg></button>
+      <button class="close" id="wClose" type="button" aria-label="Close" title="Close"><svg viewBox="0 0 12 12" aria-hidden="true"><rect x="1" y="1" width="2" height="2"/><rect x="9" y="1" width="2" height="2"/><rect x="3" y="3" width="2" height="2"/><rect x="7" y="3" width="2" height="2"/><rect x="5" y="5" width="2" height="2"/><rect x="5" y="5" width="2" height="2"/><rect x="7" y="7" width="2" height="2"/><rect x="3" y="7" width="2" height="2"/><rect x="9" y="9" width="2" height="2"/><rect x="1" y="9" width="2" height="2"/></svg></button>
+    </div>
+  </header>
+
+  <section class="hero lite-hero">
+    <div class="h1" id="h1"></div>
+    <p class="lede" id="lede"></p>
+  </section>
+
+  <div class="lite-stack">
+    <section class="comms-strip">
+      <div class="ava"><img src="assets/jamie.png" alt=""></div>
+      <div class="said"><b>Jamie:</b> <span id="jamie"></span></div>
+    </section>
+    <section class="panel launchp" id="launchp"><i class="cutline"></i><div id="launchBody"></div></section>
+  </div>
+
+  <aside class="rcol">
+    <!-- Filled from news.json (remote → cache → bundled). Panels stay hidden when there is no content. -->
+    <section class="panel feat" id="featP" hidden><i class="cutline"></i>
+      <div class="ptitle">Featured transmission<span class="r" id="featSrc"></span></div>
+      <div class="art"><img id="featImg" src="assets/terran.png" style="width:300px;right:-40px;top:-70px" alt=""></div>
+      <span class="lbl sun" id="featTag" hidden></span><h3 id="featTitle"></h3>
+      <p id="featText"></p>
+    </section>
+    <section class="panel list" id="roadP" hidden><i class="cutline"></i>
+      <div class="ptitle">Roadmap · flight plan<span class="r" id="roadSrc"></span></div>
+      <div id="roadRows"></div>
+    </section>
+  </aside>
+
+
+  <!-- Settings view (#app[data-view="settings"]). Layout follows spec/settings/settings.html (Lead UI/UX);
+       only the settings the launcher actually implements are shown. Geometry/entrance live in CSS tokens. -->
+  <div class="set-scrim" id="settings-dim" aria-hidden="true"></div>
+  <main class="set" id="settings" role="dialog" aria-modal="true" aria-labelledby="setTitle" hidden>
+    <div class="set-head"><button class="btn2 sm" type="button" id="sBack" aria-label="Back to launcher">← Back</button>
+      <span class="kicker">Systems</span><h1 class="h1" id="setTitle">Settings</h1>
+      <span class="saved" id="sSaved">Changes save as you go · <b>Esc</b> to go back</span></div>
+    <div class="set-grid">
+      <div class="set-col"><section class="panel prime grow" aria-labelledby="s-gen"><i class="cutline"></i>
+        <div class="ptitle" id="s-gen">General · launch behaviour<span class="r">01</span></div>
+        <div class="srow "><div class="lab"><b>Start with Windows</b><small>Opens the launcher when you sign in to Windows.</small></div><button class="tgl" type="button" role="switch" id="sAuto" aria-checked="false" aria-label="Start with Windows"><i></i></button></div>
+        <div class="srow sub" id="sAutoMinRow"><div class="lab"><b>Start minimised to the tray</b><small>Needs “Start with Windows”.</small></div><button class="tgl" type="button" role="switch" id="sAutoMin" aria-checked="false" aria-label="Start minimised to the tray"><i></i></button></div>
+        <div class="srow "><div class="lab"><b>Close button</b><small>What ✕ does. Quit from the tray menu either way.</small></div><div class="seg" role="radiogroup" id="sClose" aria-label="Close button"><button type="button" role="radio" data-v="tray" aria-checked="false">To tray</button><button type="button" role="radio" data-v="quit" aria-checked="true">Quit</button></div></div>
+        <div class="srow "><div class="lab"><b>When the game launches</b><small>Default: the game opens in this window.</small></div><div class="selw"><button class="sel" id="sOnLaunch" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="When the game launches" style="min-width:250px"><span class="selt"></span><svg viewBox="0 0 10 10" aria-hidden="true"><rect x="0" y="2" width="2" height="2"/><rect x="2" y="4" width="2" height="2"/><rect x="4" y="6" width="2" height="2"/><rect x="6" y="4" width="2" height="2"/><rect x="8" y="2" width="2" height="2"/></svg></button><div class="lbx" role="listbox" hidden><div role="option" data-v="replace" aria-selected="false">Use this window</div><div role="option" data-v="minimize" aria-selected="false">New window · minimise launcher</div><div role="option" data-v="keep" aria-selected="false">New window · keep launcher</div><div role="option" data-v="tray" aria-selected="false">New window · launcher to tray</div><div role="option" data-v="close" aria-selected="false">New window · close launcher</div></div></div></div>
+        <div class="srow sub"><div class="lab"><b>Start the game full screen</b><small>F11 switches at any time.</small></div><button class="tgl" type="button" role="switch" id="sFull" aria-checked="false" aria-label="Start the game full screen"><i></i></button></div>
+        <div class="tray"><b>Tray icon menu (right-click)</b><span>Open launcher · Launch Solfall · Check for updates · Quit</span></div>
+      </section></div>
+      <div class="set-col"><section class="panel" aria-labelledby="s-upd"><i class="cutline"></i>
+        <div class="ptitle" id="s-upd">Updates<span class="r">02</span></div>
+        <div class="srow "><div class="lab"><b>Update the launcher automatically</b><small>Downloads in the background. A restart applies it.</small></div><button class="tgl" type="button" role="switch" id="sAutoUpd" aria-checked="false" aria-label="Update automatically"><i></i></button></div>
+        <div class="srow "><div class="lab"><b>Channel</b></div><button class="sel" type="button" aria-haspopup="listbox" aria-label="Update channel" aria-disabled="true" disabled style="min-width:150px">Stable<svg viewBox="0 0 10 10" aria-hidden="true"><rect x="0" y="2" width="2" height="2"/><rect x="2" y="4" width="2" height="2"/><rect x="4" y="6" width="2" height="2"/><rect x="6" y="4" width="2" height="2"/><rect x="8" y="2" width="2" height="2"/></svg></button></div>
+        <div class="srow stack"><div class="kv"><span>Launcher</span><b class="num" id="sVer">—</b></div>
+          <div class="kv"><span>Last checked</span><b id="sChecked">—</b></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin:2px 0 8px;gap:12px"><span id="sUpdState" style="font:400 17px var(--f-body);color:var(--ink-3)">—</span><button class="btn2 sm" type="button" id="sCheck">⟳ Check now</button></div></div>
+      </section><section class="panel grow" aria-labelledby="s-dsp"><i class="cutline"></i>
+        <div class="ptitle" id="s-dsp">Display<span class="r">03</span></div>
+        <div class="srow "><div class="lab"><b>Window size</b><small>Minimum 1280 × 720.</small></div><div class="selw"><button class="sel" id="sSize" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Window size" style="min-width:150px"><span class="selt"></span><svg viewBox="0 0 10 10" aria-hidden="true"><rect x="0" y="2" width="2" height="2"/><rect x="2" y="4" width="2" height="2"/><rect x="4" y="6" width="2" height="2"/><rect x="6" y="4" width="2" height="2"/><rect x="8" y="2" width="2" height="2"/></svg></button><div class="lbx" role="listbox" hidden><div role="option" data-v="1280x720" aria-selected="false">1280 × 720</div><div role="option" data-v="1440x900" aria-selected="false">1440 × 900</div><div role="option" data-v="1600x1000" aria-selected="false">1600 × 1000</div><div role="option" data-v="1920x1080" aria-selected="false">1920 × 1080</div></div></div></div>
+        <div class="srow "><div class="lab"><b>Remember size &amp; maximised</b><small>Reopens the way you left it.</small></div><button class="tgl" type="button" role="switch" id="sRemember" aria-checked="false" aria-label="Remember window"><i></i></button></div>
+        <div class="srow "><div class="lab"><b>UI scale</b></div><div class="selw"><button class="sel" id="sScale" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="UI scale" style="min-width:170px"><span class="selt"></span><svg viewBox="0 0 10 10" aria-hidden="true"><rect x="0" y="2" width="2" height="2"/><rect x="2" y="4" width="2" height="2"/><rect x="4" y="6" width="2" height="2"/><rect x="6" y="4" width="2" height="2"/><rect x="8" y="2" width="2" height="2"/></svg></button><div class="lbx" role="listbox" hidden><div role="option" data-v="auto" aria-selected="false">Match Windows</div><div role="option" data-v="100" aria-selected="false">100 %</div><div role="option" data-v="125" aria-selected="false">125 %</div><div role="option" data-v="150" aria-selected="false">150 %</div></div></div></div>
+        <div class="srow "><div class="lab"><b>Reduce motion</b><small>Stops drifting rocks and fades. Follows Windows until changed.</small></div><button class="tgl" type="button" role="switch" id="sMotion" aria-checked="false" aria-label="Reduce motion"><i></i></button></div>
+      </section></div>
+      <div class="set-col"><section class="panel" aria-labelledby="s-aud"><i class="cutline"></i>
+        <div class="ptitle" id="s-aud">Audio<span class="r">04</span></div>
+        <div class="srow "><div class="lab"><b>Volume</b></div><div class="sld" id="sVol" role="slider" tabindex="0" aria-label="Volume" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" style="--v:50%"><i></i></div><span class="sval" id="sVolV">50</span></div>
+        <div class="srow "><div class="lab"><b>Music</b><small><span>SOLFALL Theme · Kain Horsfield</span></small></div><button class="tgl" type="button" role="switch" id="sMusic" aria-checked="false" aria-label="Music"><i></i></button></div>
+        <div class="srow sub" id="sMVolRow"><div class="lab"><b>Music volume</b></div><div class="sld" id="sMVol" role="slider" tabindex="0" aria-label="Music volume" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" style="--v:50%"><i></i></div><span class="sval" id="sMVolV">50</span></div>
+      </section><section class="panel grow" aria-labelledby="s-abt"><i class="cutline"></i>
+        <div class="ptitle" id="s-abt">About<span class="r">05</span></div>
+        <div class="kv" style="margin-top:6px"><span>SOLFALL Launcher</span><b class="num" id="sVer2">—</b></div>
+        <div class="kv" id="sBuildRow" hidden><span>Build</span><b id="sBuild" style="color:var(--sun)"></b></div>
+        <div class="kv"><span>Site</span><a href="#" data-link="web">solfall.online ↗</a></div>
+        <div class="kv"><span>Community</span><a href="#" data-link="discord">Discord ↗</a></div>
+        <div class="kv"><span>Diagnostics</span><button class="btn2 sm" type="button" id="sLogs" title="Open the folder with the launcher's diagnostic logs">Open logs folder</button></div>
+        <p style="font:400 15px/1.25 var(--f-body);color:var(--ink-3);margin:10px 0 8px">Solfall assets, logo and music are property of their owners and used with permission. Built with Tauri.</p>
+      </section></div>
+    </div>
+  </main>
+  <footer class="dock">
+    <a class="chip sun" href="#" data-link="patreon"><img src="assets/coins.svg" alt="">Back us on Patreon</a>
+    <a class="chip" href="#" data-link="discord"><img src="assets/compass.svg" alt="">Discord ↗</a>
+    <a class="chip" href="#" data-link="web"><img src="assets/anchor.svg" alt="">solfall.online ↗</a>
+    <span class="np" id="np" style="margin-left:auto" role="button" tabindex="0" title="Play / pause music"><span class="eq"><i style="height:6px"></i><i style="height:14px"></i><i style="height:9px"></i><i style="height:12px"></i></span>Now playing — <b>Kain Horsfield · SOLFALL Theme</b></span>
+  </footer>
+  <div class="scan"></div>
+  <audio id="music" src="assets/theme.mp3" preload="none" loop></audio>
+</div>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+/* Launcher 0.2.0 — integration + motion layer (spec/animation-spec.md). Loaded LAST.
+   Rule: only transform and opacity are animated; loops pause when the window is unfocused/hidden;
+   prefers-reduced-motion (or Settings → Reduce motion) turns loops off and UI motion into a short fade. */
+:root {
+  --motion-press: 80ms; --motion-hover: 150ms; --motion-ui: 180ms; --motion-swap: 200ms;
+  --motion-panel: 280ms; --motion-rm: 80ms; --motion-pulse: 5s;
+  --ease-out: cubic-bezier(.16, 1, .3, 1); --ease-in-out: cubic-bezier(.4, 0, .2, 1);
+  /* Settings entrance (geometry from spec/settings; entrance not defined yet → fade + small rise, tweak here) */
+  --set-enter-y: 8px;
+}
+a.chip { text-decoration: none; }
+html, body { display: block; width: 100%; height: 100%; overflow: hidden; margin: 0; }
+.titlebar { -webkit-user-select: none; user-select: none; }
+.wctl span { cursor: pointer; }
+.wctl span.on { color: var(--sun); }
+.feat .ex { color: var(--violet); font-size: 10px; letter-spacing: .12em; margin-left: 6px; }
+.ex { color: var(--violet); }
+.np { cursor: pointer; }
+.np.off { opacity: .55; }
+.np .eq i { transform-origin: bottom; }
+
+/* ---------- background loops ---------- */
+/* Rock drift: same path/timing as c-system.css (18 s alternate, ease-in-out, steps(28) ≈ 1.5 updates/s) but driven by
+   js/app.js (driftStepper) — WebKit still ticks a steps() CSS animation every frame (measured: 100 % of a core on the
+   software-rendered Linux proxy); a 643 ms timer that writes `transform` costs ~nothing on both engines. */
+.drift { animation: none !important; will-change: transform; }
+.l-star-glow { position: absolute; z-index: -4; right: -516px; bottom: -786px; width: 1536px; height: 1536px; pointer-events: none;
+  background: radial-gradient(circle at 50% 50%, rgba(255, 140, 30, .45), transparent 58%);
+  opacity: .6; }
+/* Star-glow pulse (.45 ↔ .8, 5 s alternate) — Windows/WebView2 only: Chromium composites an opacity animation on
+   its own layer (no repaint). On WebKitGTK (Linux proxy: no compositing, software raster) every step repaints ~70 %
+   of the window (measured ≈ 440 ms per step), so there the glow stays static at .6 (bench/README.md). */
+#app[data-platform="windows"] .l-star-glow { opacity: .45; animation: star-pulse var(--motion-pulse) var(--ease-in-out) infinite alternate; }
+@keyframes star-pulse { from { opacity: .45; } to { opacity: .8; } }
+#app[data-focused="false"] :is(.drift, .spin, .l-star-glow),
+.app.paused :is(.drift, .spin, .l-star-glow) { animation-play-state: paused; }
+
+/* ---------- hover overlay (replaces filter/box-shadow transitions of c-lite.css and settings.css) ---------- */
+.app.lite.fam :is(.launch, .sq, .btn2, .chip, .titlebar nav span, .wctl span, a, .tgl, .sel, .seg button, .wc button) {
+  transition: transform var(--motion-press) var(--ease-out);
+}
+.app.lite.fam :is(.launch, .sq, .btn2, .chip):hover { filter: none; }
+.app.lite.fam :is(.launch, .sq, .btn2, .chip)::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0;
+  background: var(--hover-fill, rgba(255, 231, 173, .12)); transition: opacity var(--motion-hover) var(--ease-out); }
+.app.lite.fam .launch::after { background: rgba(255, 231, 173, .28); }
+.app.lite.fam .sq::after, .app.lite.fam .btn2::after { --hover-fill: rgba(198, 244, 255, .10); }
+.app.lite.fam :is(.launch, .sq, .btn2, .chip):is(:hover, :focus-visible)::after { opacity: 1; }
+.app.lite.fam :is(.launch, .sq, .btn2, .chip):is(.off, [aria-disabled="true"])::after { opacity: 1; }
+.app.lite.fam :is(.titlebar nav span, .wctl span):hover { opacity: .85; }
+.app.lite.fam a:hover { filter: none; }
+.app.lite.fam :is(.launch, .sq, .btn2, .chip, .titlebar nav span, .wctl span, a, .seg button):active { transform: translateY(1px); }
+.app.lite.fam :is(.tgl, .sel, .sld):hover { filter: none; }
+.app.lite.fam .tgl i { transition: transform 120ms steps(3); left: 4px !important; }
+.app.lite.fam .tgl[aria-checked="true"] i { transform: translateX(20px); }
+.app.lite.fam .wc button { transition: transform var(--motion-press) var(--ease-out); }
+
+/* ---------- state swap / notices / progress ---------- */
+.meta .notice { display: inline-block; animation: notice-in var(--motion-ui) var(--ease-out) both; }
+@keyframes notice-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+#app[data-state="main"] .lu.ready { animation: lu-in var(--motion-ui) var(--ease-out) both; }
+@keyframes lu-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.bar i, .bar.thin i { width: 100%; right: 0; transform: scaleX(var(--p, 0)); transform-origin: left center;
+  transition: transform var(--motion-ui) var(--ease-out); }
+
+/* ---------- Settings view: #app[data-view="settings"] ---------- */
+.app.lite.fam .set-scrim { opacity: 0; transition: opacity var(--motion-panel) var(--ease-out); visibility: hidden; }
+.app.lite.fam .set { opacity: 0; transform: translateY(var(--set-enter-y)); transition: opacity var(--motion-panel) var(--ease-out), transform var(--motion-panel) var(--ease-out); }
+.app.lite.fam .set[hidden] { display: none; }
+#app[data-view="settings"] .set-scrim { opacity: 1; visibility: visible; }
+#app[data-view="settings"] .set.in { opacity: 1; transform: none; }
+#app[data-view="settings"] :is(.hero, .lite-stack, .rcol) { visibility: hidden; }
+#app[data-view="settings"] #wSettings { color: var(--sun-2); background: rgba(255, 194, 71, .10); box-shadow: inset 0 -2px 0 var(--sun); }
+.app.lite.fam .selw { position: relative; }
+.app.lite.fam .selw .lbx { right: 0; top: calc(var(--ctl-h) + 4px); }
+.app.lite.fam .lbx div { cursor: pointer; }
+.app.lite.fam .lbx div:hover { background: rgba(92, 225, 255, .12); color: var(--ink); }
+.app.lite.fam .srow.dis .sld { opacity: .4; pointer-events: none; }
+
+/* ---------- reduced motion (OS) or Settings override (data-motion) ---------- */
+@media (prefers-reduced-motion: reduce) {
+  #app:not([data-motion="full"]) :is(.drift, .spin, .l-star-glow) { animation: none !important; }
+  #app:not([data-motion="full"]), #app:not([data-motion="full"]) * { transition-duration: var(--motion-rm) !important; transition-property: opacity !important; }
+  #app:not([data-motion="full"]) :is(.notice, .lu.ready) { animation-duration: var(--motion-rm) !important; }
+}
+#app[data-motion="reduced"] :is(.drift, .spin, .l-star-glow) { animation: none !important; }
+#app[data-motion="reduced"], #app[data-motion="reduced"] * { transition-duration: var(--motion-rm) !important; transition-property: opacity !important; }
+#app[data-motion="reduced"] :is(.notice, .lu.ready) { animation-duration: var(--motion-rm) !important; }
+/* Settings columns scroll when the window is lower than ~860 px (spec/settings README §2). */
+.app.lite.fam .set-col { overflow-x: hidden; overflow-y: auto; padding: 6px; margin: -6px; scrollbar-width: thin; scrollbar-color: rgba(255, 194, 71, .35) transparent; }
+.app.lite.fam .set-col .panel { flex-shrink: 0; }
+.app.lite.fam .set-col .panel.grow { flex: 1 0 auto; }
+/* Static, expensive-to-raster layers (star with a 160 px drop-shadow, blurred rocks) get their own layer so a drift
+   step or a glow step only re-composites instead of re-rasterising the filters. */
+/* The WARM star filter (brightness/saturate/hue-rotate + 160 px drop-shadow) is BAKED by tools/bake-star.py into
+   star-warm.png + star-shadow.png: no runtime filter on the largest layer (was ~440 ms per repaint in software). */
+.app.lite.fam .l-star { filter: none; }
+.app.lite.fam .l-star-shadow { position: absolute; z-index: -4; right: -756px; bottom: -1026px; width: 2016px; height: 2016px;
+  opacity: .95; image-rendering: auto; pointer-events: none; }
+
+/* 0.2.1: sections without content are hidden (hidden attribute must win over component display rules). */
+#app [hidden] { display: none !important; }

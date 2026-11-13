@@ -1,0 +1,476 @@
+--- /tmp/main-0.2.0.rs	2026-11-13 17:22:41.242143069 -0300
++++ src-tauri/src/main.rs	2026-11-13 17:17:44.518148568 -0300
+@@ -1,9 +1,11 @@
+ // SOLFALL Launcher — Tauri v2 (Windows: WebView2).
+ //
+-// Flow: the window starts on the local UI (src/index.html). LAUNCH, by default, navigates THAT SAME window
+-// to play.solfall.online as a top-level document (no iframe: the site sends X-Frame-Options: DENY), so the
+-// launcher document is discarded and its memory freed. Optional (Settings → "On launch"): open the game in
+-// its own window and minimise the launcher or hide it to the tray.
++// Flow: the window starts on the local UI (src/index.html). LAUNCH, by default (0.2.1+, as in 0.1.0), navigates
++// THAT SAME window to play.solfall.online as a top-level document (no iframe: the site sends X-Frame-Options: DENY),
++// so the launcher document is discarded and only one webview remains. Optional (Settings → "When the game
++// launches"): open the game in its own window and minimise/keep/hide/close the launcher.
++// Every webview shares ONE WebView2 environment: same data directory and identical browser args (harden()).
++// Diagnostics: rotating log in %LOCALAPPDATA%\SolfallLauncher\logs\launcher.log (see mod diag).
+ // The remote game page has NO IPC access: capabilities only cover the local "main" window, and F11 in the
+ // game is handled natively (WebView2 AcceleratorKeyPressed), without injecting anything into the page.
+ #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+@@ -36,6 +38,10 @@
+ const DEFAULT_GAME_URL: &str = "https://play.solfall.online";
+ const DISCORD_INVITE: &str = "https://discord.gg/scyet8grSR";
+ const WINDOW_TITLE: &str = "SOLFALL";
++/// Remote news feed (schema v2). Fetched by Rust (no CORS preflight; GitHub raw rejects preflights), with ETag.
++const NEWS_URL: &str = "https://raw.githubusercontent.com/CrystalFVPM-DEV/SOLFALL-Launcher-by-CrystalFVPM/main/content/news.json";
++/// TEST-ONLY updater pubkey (base64 prefix): only reported in the diagnostic log / debug About.
++const TEST_PUBKEY_PREFIX: &str = "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEI4QUM4Q0Q3NUExMDAxRjUK";
+ 
+ /// In-window navigation allowlist (game + Discord login + hCaptcha). Everything else opens in the
+ /// system browser. Google OAuth does NOT work embedded (disallowed_useragent), so it is not listed.
+@@ -45,6 +51,70 @@
+ /// --autoplay-policy: the launcher theme may start without a click (the UI also retries on first gesture).
+ const WEBVIEW2_ARGS: &str = "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection,Translate,AutofillServerCommunication --autoplay-policy=no-user-gesture-required";
+ 
++// ---------------------------------------------------------------- diagnostics log
++/// `diag!(...)`: stdout + rotating file log (%LOCALAPPDATA%\SolfallLauncher\logs\launcher.log, 512 KB × 3 files).
++/// Never logs secrets, cookies, or anything typed in the game.
++macro_rules! diag { ($($t:tt)*) => { crate::diag::log(&format!($($t)*)) } }
++mod diag {
++    use std::io::Write;
++    use std::path::PathBuf;
++    use std::sync::Mutex;
++    static FILE: Mutex<Option<std::fs::File>> = Mutex::new(None);
++    static PATH: Mutex<Option<PathBuf>> = Mutex::new(None);
++    const MAX: u64 = 512 * 1024;
++    const KEEP: u32 = 3;
++    pub fn dir(app: &tauri::AppHandle) -> Option<PathBuf> {
++        #[cfg(windows)]
++        if let Ok(l) = std::env::var("LOCALAPPDATA") { return Some(PathBuf::from(l).join("SolfallLauncher").join("logs")); }
++        use tauri::Manager;
++        app.path().app_local_data_dir().ok().map(|d| d.join("logs"))
++    }
++    fn rotate(p: &PathBuf) {
++        if std::fs::metadata(p).map(|m| m.len() < MAX).unwrap_or(true) { return; }
++        for i in (1..KEEP).rev() {
++            let from = if i == 1 { p.clone() } else { p.with_extension(format!("{}.log", i - 1)) };
++            let _ = std::fs::rename(&from, p.with_extension(format!("{i}.log")));
++        }
++    }
++    fn open(p: &PathBuf) -> Option<std::fs::File> {
++        std::fs::OpenOptions::new().create(true).append(true).open(p).ok()
++    }
++    pub fn init(app: &tauri::AppHandle) {
++        let Some(d) = dir(app) else { return };
++        if std::fs::create_dir_all(&d).is_err() { return; }
++        let p = d.join("launcher.log");
++        rotate(&p);
++        *FILE.lock().unwrap() = open(&p);
++        *PATH.lock().unwrap() = Some(p);
++    }
++    pub fn log(msg: &str) {
++        println!("{msg}");
++        let mut f = FILE.lock().unwrap();
++        if let Some(file) = f.as_mut() {
++            let _ = writeln!(file, "{} {}", ts(), msg);
++            if file.metadata().map(|m| m.len() >= MAX).unwrap_or(false) {
++                if let Some(p) = PATH.lock().unwrap().as_ref() { *f = None; rotate(p); *f = open(p); }
++            }
++        }
++    }
++    /// UTC ISO-8601 timestamp without extra crates.
++    fn ts() -> String {
++        let d = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default();
++        let s = d.as_secs() as i64;
++        let z = s.div_euclid(86400) + 719468;
++        let era = z.div_euclid(146097);
++        let doe = z - era * 146097;
++        let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
++        let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
++        let mp = (5 * doy + 2) / 153;
++        let day = doy - (153 * mp + 2) / 5 + 1;
++        let m = if mp < 10 { mp + 3 } else { mp - 9 };
++        let y = yoe + era * 400 + if m <= 2 { 1 } else { 0 };
++        let r = s.rem_euclid(86400);
++        format!("{y:04}-{m:02}-{day:02}T{:02}:{:02}:{:02}.{:03}Z", r / 3600, r % 3600 / 60, r % 60, d.subsec_millis())
++    }
++}
++
+ // ---------------------------------------------------------------- settings (JSON in the app config dir)
+ #[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
+ struct WinGeom { w: f64, h: f64, maximized: bool }
+@@ -60,8 +130,8 @@
+     close_action: String,
+     /// Game window starts full screen (F11 toggles).
+     game_fullscreen: bool,
+-    /// After LAUNCH: "minimize" (default) | "close" | "keep" | "tray" → the game opens in its own window;
+-    /// "replace" → this window becomes the game (lowest RAM).
++    /// After LAUNCH: "replace" (default, 0.2.1) → this window becomes the game (one webview, lowest RAM);
++    /// "minimize" | "close" | "keep" | "tray" → the game opens in its own window.
+     on_launch: String,
+     /// Check + download launcher updates in the background at start-up.
+     auto_update: bool,
+@@ -78,6 +148,9 @@
+     /// Music on/off (spec default OFF) and its relative volume (default 0.6).
+     music: bool,
+     music_volume: f64,
++    /// Settings format revision. Files without it (0.2.0) get the 0.2.1 default on_launch = "replace".
++    #[serde(default)]
++    rev: u32,
+ }
+ impl Settings {
+     fn autostart_minimized_effective(&self) -> bool { self.start_minimized }
+@@ -86,11 +159,12 @@
+     fn default() -> Self {
+         Settings {
+             autostart: false, start_minimized: false, close_action: "quit".into(), game_fullscreen: false,
+-            on_launch: "minimize".into(), auto_update: true, window_size: "1440x900".into(), remember_window: true,
+-            window: None, ui_scale: "auto".into(), reduce_motion: None, volume: 0.8, music: false, music_volume: 0.6,
++            on_launch: "replace".into(), auto_update: true, window_size: "1440x900".into(), remember_window: true,
++            window: None, ui_scale: "auto".into(), reduce_motion: None, volume: 0.8, music: false, music_volume: 0.6, rev: SETTINGS_REV,
+         }
+     }
+ }
++const SETTINGS_REV: u32 = 2;
+ fn settings_path(app: &AppHandle) -> Option<std::path::PathBuf> {
+     app.path().app_config_dir().ok().map(|d| d.join("settings.json"))
+ }
+@@ -105,7 +179,9 @@
+ fn sanitize(mut s: Settings) -> Settings {
+     s.volume = unit(s.volume, 0.8);
+     s.music_volume = unit(s.music_volume, 0.6);
+-    if !matches!(s.on_launch.as_str(), "replace" | "minimize" | "close" | "keep" | "tray") { s.on_launch = "minimize".into(); }
++    // 0.2.0 shipped on_launch = "minimize" (separate game window), which broke LAUNCH on Windows → reset once.
++    if s.rev < 2 { s.on_launch = "replace".into(); s.rev = SETTINGS_REV; }
++    if !matches!(s.on_launch.as_str(), "replace" | "minimize" | "close" | "keep" | "tray") { s.on_launch = "replace".into(); }
+     if !matches!(s.close_action.as_str(), "quit" | "tray") { s.close_action = "quit".into(); }
+     if parse_size(&s.window_size).is_none() { s.window_size = "1440x900".into(); }
+     if !matches!(s.ui_scale.as_str(), "auto" | "100" | "125" | "150") { s.ui_scale = "auto".into(); }
+@@ -138,7 +214,7 @@
+     s.window = old.window.clone(); // geometry is owned by Rust (saved on close)
+     if s.autostart != app.autolaunch().is_enabled().unwrap_or(false) {
+         let r = if s.autostart { app.autolaunch().enable() } else { app.autolaunch().disable() };
+-        if let Err(e) = r { println!("[settings] autostart: {e}"); s.autostart = !s.autostart; }
++        if let Err(e) = r { diag!("[settings] autostart: {e}"); s.autostart = !s.autostart; }
+     }
+     if let Some(m) = app.get_webview_window("main") {
+         if s.window_size != old.window_size && !m.is_maximized().unwrap_or(false) && !m.is_fullscreen().unwrap_or(false) {
+@@ -190,7 +266,7 @@
+ }
+ fn open_external(u: &Url) {
+     if matches!(u.scheme(), "https" | "http" | "mailto") {
+-        println!("[open] system browser: {u}");
++        diag!("[open] system browser: {u}");
+         let _ = tauri_plugin_opener::open_url(u.as_str(), None::<&str>);
+     }
+ }
+@@ -205,6 +281,10 @@
+     demo_state: Option<String>,
+     demo_view: Option<String>,
+     updater_endpoints: Vec<String>,
++    /// Debug UI (About → build row): debug builds or SOLFALL_DEBUG=1. Never shown by default.
++    debug_ui: bool,
++    test_key: bool,
++    logs_dir: Option<String>,
+ }
+ #[tauri::command]
+ fn launcher_info(app: AppHandle) -> LauncherInfo {
+@@ -222,12 +302,52 @@
+         demo_state: std::env::var("SOLFALL_DEMO_STATE").ok(),
+         demo_view: std::env::var("SOLFALL_DEMO_VIEW").ok(),
+         updater_endpoints: compiled_endpoints(&app).iter().map(|u| u.to_string()).collect(),
++        debug_ui: cfg!(debug_assertions) || std::env::var("SOLFALL_DEBUG").map(|v| v == "1").unwrap_or(false),
++        test_key: pubkey_is_test(&app),
++        logs_dir: diag::dir(&app).map(|d| d.display().to_string()),
+     }
+ }
+ 
+-/// UI → stdout (test evidence on the Linux proxy; nothing sensitive is ever logged).
++/// UI → diagnostic log (nothing sensitive is ever logged).
+ #[tauri::command]
+-fn ui_log(msg: String) { println!("[ui] {}", msg.chars().take(200).collect::<String>()); }
++fn ui_log(msg: String) { diag!("[ui] {}", msg.chars().take(200).collect::<String>()); }
++fn pubkey_is_test(app: &AppHandle) -> bool {
++    app.config().plugins.0.get("updater").and_then(|u| u.get("pubkey")).and_then(|v| v.as_str())
++        .map(|k| k.starts_with(TEST_PUBKEY_PREFIX)).unwrap_or(false)
++}
++/// Settings → "Open logs folder".
++#[tauri::command]
++fn open_logs(app: AppHandle) -> Result<(), String> {
++    use tauri_plugin_opener::OpenerExt;
++    let d = diag::dir(&app).ok_or("no logs dir")?;
++    let _ = std::fs::create_dir_all(&d);
++    diag!("[ui] open logs folder {}", d.display());
++    app.opener().open_path(d.display().to_string(), None::<&str>).map_err(|e| e.to_string())
++}
++
++// ---------------------------------------------------------------- news (remote feed, ETag)
++#[derive(Serialize)]
++struct NewsResponse { status: u16, etag: Option<String>, body: Option<String> }
++/// GET NEWS_URL (fixed: no arbitrary URL from the page) with If-None-Match. Short timeouts; max 512 KB.
++/// The UI validates the JSON and falls back to its cache, then to the bundled feed.
++#[tauri::command]
++async fn fetch_news(etag: Option<String>) -> Result<NewsResponse, String> {
++    let client = reqwest::Client::builder()
++        .connect_timeout(std::time::Duration::from_secs(3))
++        .timeout(std::time::Duration::from_secs(5))
++        .user_agent(concat!("SolfallLauncher/", env!("CARGO_PKG_VERSION")))
++        .build().map_err(|e| e.to_string())?;
++    let mut rq = client.get(NEWS_URL).header("Accept", "application/json");
++    if let Some(e) = etag.filter(|e| e.len() < 200 && e.is_ascii()) { rq = rq.header("If-None-Match", e); }
++    let res = rq.send().await.map_err(|e| { diag!("[news] fetch failed: {e}"); e.to_string() })?;
++    let status = res.status().as_u16();
++    let etag = res.headers().get("etag").and_then(|v| v.to_str().ok()).map(String::from);
++    diag!("[news] GET {NEWS_URL} -> {status}");
++    if status != 200 { return Ok(NewsResponse { status, etag, body: None }); }
++    let bytes = res.bytes().await.map_err(|e| e.to_string())?;
++    if bytes.len() > 512 * 1024 { return Err("news.json too large".into()); }
++    Ok(NewsResponse { status, etag, body: Some(String::from_utf8_lossy(&bytes).into_owned()) })
++}
+ 
+ // ---------------------------------------------------------------- updates
+ #[derive(Serialize)]
+@@ -277,7 +397,7 @@
+             for c in compiled_endpoints(&app) { if !eps.contains(&c) { eps.push(c); } }
+             b = b.endpoints(eps).map_err(|e| e.to_string())?;
+         }
+-        Some((raw, None)) => println!("[updater] manifest endpoint ignored (not allowed): {raw}"),
++        Some((raw, None)) => diag!("[updater] manifest endpoint ignored (not allowed): {raw}"),
+         None => {}
+     }
+     let updater = b
+@@ -308,12 +428,12 @@
+     state.downloading.store(false, Ordering::SeqCst);
+     match res {
+         Ok(bytes) => {
+-            println!("[updater] download complete: {} bytes, signature verified OK (minisign)", bytes.len());
++            diag!("[updater] download complete: {} bytes, signature verified OK (minisign)", bytes.len());
+             *state.bytes.lock().unwrap() = Some(bytes);
+             Ok(())
+         }
+         Err(e) => {
+-            println!("[updater] ERROR in download/verification: {e}");
++            diag!("[updater] ERROR in download/verification: {e}");
+             *state.error.lock().unwrap() = Some(e.to_string());
+             Err(e.to_string())
+         }
+@@ -344,9 +464,9 @@
+     let state = app.state::<AppState>();
+     let upd = state.pending.lock().unwrap().clone().ok_or("no pending update")?;
+     let bytes = state.bytes.lock().unwrap().take().ok_or("update not downloaded")?;
+-    println!("[updater] installing {} ...", upd.version);
++    diag!("[updater] installing {} ...", upd.version);
+     upd.install(bytes).map_err(|e| e.to_string())?;
+-    println!("[updater] installed; restarting");
++    diag!("[updater] installed; restarting");
+     app.restart();
+ }
+ /// "Restart to apply" (after the grace period of the blocking update state).
+@@ -355,12 +475,20 @@
+ 
+ // ---------------------------------------------------------------- windows
+ /// Common hardening + behaviour for every webview window we create (main, game, login popups).
+-fn harden<'a>(app: &AppHandle, b: WebviewWindowBuilder<'a, tauri::Wry, AppHandle>) -> WebviewWindowBuilder<'a, tauri::Wry, AppHandle> {
++/// The WebView2 user-data folder (= Tauri's default, made explicit so EVERY webview is provably identical).
++/// WebView2 requires identical environment options per user-data folder; a mismatch fails the 2nd webview.
++fn data_dir(app: &AppHandle) -> Option<std::path::PathBuf> { app.path().app_local_data_dir().ok() }
++fn harden<'a>(app: &AppHandle, mut b: WebviewWindowBuilder<'a, tauri::Wry, AppHandle>) -> WebviewWindowBuilder<'a, tauri::Wry, AppHandle> {
+     let app2 = app.clone();
++    if let Some(d) = data_dir(app) { b = b.data_directory(d); }
+     b.additional_browser_args(WEBVIEW2_ARGS)
++        .on_page_load(|w, p| {
++            let ev = match p.event() { tauri::webview::PageLoadEvent::Started => "started", tauri::webview::PageLoadEvent::Finished => "finished" };
++            diag!("[page] {} {ev} {}", w.label(), p.url());
++        })
+         .background_color(tauri::window::Color(11, 6, 3, 255))
+         .on_navigation(|u| {
+-            if nav_allowed(u) { true } else { println!("[nav] external -> system browser: {u}"); open_external(u); false }
++            if nav_allowed(u) { true } else { diag!("[nav] external -> system browser: {u}"); open_external(u); false }
+         })
+         .on_new_window(move |u, features| {
+             // Popups (e.g. OAuth): only allowlisted hosts, created as OUR window so they share the
+@@ -373,7 +501,7 @@
+                     .on_document_title_changed(|w, t| { let _ = w.set_title(&t); });
+                 match harden(&app2, pb).build() {
+                     Ok(w) => { after_build(&w); tauri::webview::NewWindowResponse::Create { window: w } }
+-                    Err(e) => { eprintln!("popup: {e}"); tauri::webview::NewWindowResponse::Deny }
++                    Err(e) => { diag!("popup: {e}"); tauri::webview::NewWindowResponse::Deny }
+                 }
+             } else {
+                 open_external(&u);
+@@ -388,6 +516,7 @@
+         win2::set_window_aumid(w);
+         win2::tune(w);
+         win2::f11_fullscreen(w);
++        win2::watch(w);
+     }
+     let _ = w;
+ }
+@@ -414,10 +543,17 @@
+ #[tauri::command]
+ fn win_close(window: tauri::Window) { let _ = window.close(); }
+ 
++/// Hosts the launcher UI may open in the system browser (links can come from the REMOTE news feed, so no
++/// arbitrary schemes or hosts). Subdomains included.
++const OPEN_HOSTS: &[&str] = &["solfall.online", "discord.gg", "discord.com", "patreon.com", "github.com"];
++fn open_allowed(u: &Url) -> bool {
++    u.scheme() == "https" && u.username().is_empty() && u.password().is_none()
++        && u.host_str().map(|h| OPEN_HOSTS.iter().any(|a| h == *a || h.ends_with(&format!(".{a}")))).unwrap_or(false)
++}
+ #[tauri::command]
+ fn open_link(url: String) -> Result<(), String> {
+     let u: Url = url.parse().map_err(|e| format!("{e}"))?;
+-    if u.scheme() != "https" { return Err("https only".into()); }
++    if !open_allowed(&u) { diag!("[open] refused (not https / not an allowed host): {u}"); return Err("link not allowed".into()); }
+     open_external(&u);
+     Ok(())
+ }
+@@ -462,8 +598,10 @@
+ /// "replace": this window navigates to the game and the launcher UI is freed (lowest RAM).
+ /// "minimize" (default) / "keep" / "tray" / "close": the game opens in its own "game" window and the launcher
+ /// is minimised / left as is / hidden to the tray / closed. Closing the game window brings the launcher back.
++/// ASYNC on purpose: on Windows, building a WebviewWindow inside a SYNCHRONOUS command deadlocks (Tauri docs,
++/// WebviewWindowBuilder::new "Known issues") — the 0.2.0 black game window.
+ #[tauri::command]
+-fn launch_game(app: AppHandle, url: String) -> Result<String, String> {
++async fn launch_game(app: AppHandle, url: String) -> Result<String, String> {
+     let u: Url = url.parse().map_err(|e| format!("invalid URL: {e}"))?;
+     if u.scheme() != "https" || !u.host_str().map(host_allowed).unwrap_or(false) {
+         return Err("game URL is not on the allowlist".into());
+@@ -471,14 +609,14 @@
+     let s = load_settings(&app);
+     let main = app.get_webview_window("main").ok_or("no window")?;
+     app.state::<AppState>().in_game.store(true, Ordering::SeqCst);
+-    println!("[launch] mode={} fullscreen={} -> {u}", s.on_launch, s.game_fullscreen);
++    diag!("[launch] on_launch={} fullscreen={} -> {u}", s.on_launch, s.game_fullscreen);
+     if s.on_launch == "replace" {
+         save_geometry(&app);
+         let _ = main.set_title(WINDOW_TITLE);
+         let _ = main.set_decorations(true); // native frame + buttons while in the game
+         let _ = main.set_zoom(1.0);
+         if s.game_fullscreen { let _ = main.set_fullscreen(true); }
+-        main.navigate(u).map_err(|e| e.to_string())?;
++        main.navigate(u).map_err(|e| { diag!("[launch] navigate failed: {e}"); e.to_string() })?;
+         return Ok("replace".into());
+     }
+     if let Some(g) = app.get_webview_window("game") { let _ = g.unminimize(); let _ = g.set_focus(); return Ok("focus".into()); }
+@@ -490,8 +628,9 @@
+         .resizable(true)
+         .maximized(main.is_maximized().unwrap_or(false))
+         .fullscreen(s.game_fullscreen);
+-    let g = harden(&app, b).build().map_err(|e| e.to_string())?;
++    let g = harden(&app, b).build().map_err(|e| { diag!("[launch] game window failed: {e}"); e.to_string() })?;
+     after_build(&g);
++    diag!("[launch] game window created");
+     match s.on_launch.as_str() {
+         "tray" => { make_tray(&app).map_err(|e| e.to_string())?; save_geometry(&app); let _ = main.hide(); }
+         "close" => { save_geometry(&app); let _ = main.destroy(); }
+@@ -503,7 +642,7 @@
+ 
+ /// Hide the launcher to the tray (Close button = "To tray", start minimised, on-launch = tray).
+ fn hide_to_tray(app: &AppHandle) {
+-    if let Err(e) = make_tray(app) { eprintln!("tray: {e}"); return; }
++    if let Err(e) = make_tray(app) { diag!("tray: {e}"); return; }
+     save_geometry(app);
+     if let Some(m) = app.get_webview_window("main") { let _ = m.hide(); }
+ }
+@@ -581,6 +720,41 @@
+             let _ = ctl.add_AcceleratorKeyPressed(&handler, &mut token);
+         });
+     }
++    /// Diagnostics: renderer/browser process failures and failed navigations → log.
++    pub fn watch(w: &tauri::WebviewWindow) {
++        let label = w.label().to_string();
++        let _ = w.with_webview(move |wv| unsafe {
++            let Ok(core) = wv.controller().CoreWebView2() else { return };
++            let l1 = label.clone();
++            let pf = webview2_com::ProcessFailedEventHandler::create(Box::new(move |_, args| {
++                if let Some(a) = args {
++                    let mut kind = COREWEBVIEW2_PROCESS_FAILED_KIND(0);
++                    let _ = a.ProcessFailedKind(&mut kind);
++                    let (mut reason, mut code) = (COREWEBVIEW2_PROCESS_FAILED_REASON(0), 0i32);
++                    if let Ok(a2) = a.cast::<ICoreWebView2ProcessFailedEventArgs2>() { let _ = a2.Reason(&mut reason); let _ = a2.ExitCode(&mut code); }
++                    super::diag::log(&format!("[webview2] {l1} PROCESS FAILED kind={} reason={} exit={code}", kind.0, reason.0));
++                }
++                Ok(())
++            }));
++            let mut t = 0i64;
++            let _ = core.add_ProcessFailed(&pf, &mut t);
++            let l2 = label.clone();
++            let nc = webview2_com::NavigationCompletedEventHandler::create(Box::new(move |_, args| {
++                if let Some(a) = args {
++                    let mut ok = windows::core::BOOL::default();
++                    let _ = a.IsSuccess(&mut ok);
++                    if !ok.as_bool() {
++                        let mut st = COREWEBVIEW2_WEB_ERROR_STATUS(0);
++                        let _ = a.WebErrorStatus(&mut st);
++                        super::diag::log(&format!("[webview2] {l2} navigation FAILED web_error_status={}", st.0));
++                    }
++                }
++                Ok(())
++            }));
++            let mut t2 = 0i64;
++            let _ = core.add_NavigationCompleted(&nc, &mut t2);
++        });
++    }
+     /// MemoryUsageTargetLevel Low while minimised, Normal when restored.
+     pub fn set_memory_low(w: &tauri::WebviewWindow, low: bool) {
+         let _ = w.with_webview(move |wv| unsafe {
+@@ -604,7 +778,7 @@
+         .title("SOLFALL")
+         .buttons(MessageDialogButtons::OkCancelCustom("Restart to apply".into(), "Later".into()))
+         .show(move |yes| {
+-            if yes { if let Err(e) = do_install(&app2) { eprintln!("install: {e}"); app2.exit(0); } }
++            if yes { if let Err(e) = do_install(&app2) { diag!("install: {e}"); app2.exit(0); } }
+             else { app2.exit(0); } // the new version is applied on the next start
+         });
+     true
+@@ -624,11 +798,18 @@
+         .invoke_handler(tauri::generate_handler![
+             launcher_info, ui_log, get_settings, set_settings, check_update, download_update, update_status,
+             apply_update, launch_game, open_link, win_minimize, win_close, win_toggle_maximize,
+-            win_toggle_fullscreen, win_state
++            win_toggle_fullscreen, win_state, open_logs, fetch_news
+         ])
+         .setup(|app| {
+             let h = app.handle().clone();
++            diag::init(&h);
+             let s = load_settings(&h);
++            diag!("==== SOLFALL Launcher {} start ({} {}) args={:?}", h.package_info().version, std::env::consts::OS, std::env::consts::ARCH, std::env::args().skip(1).collect::<Vec<_>>());
++            diag!("[env] webview runtime={}", tauri::webview_version().unwrap_or_else(|e| format!("unavailable: {e}")));
++            diag!("[env] browser args=\"{WEBVIEW2_ARGS}\" (identical for every webview)");
++            diag!("[env] data dir={} (WebView2 adds EBWebView\\)", data_dir(&h).map(|d| d.display().to_string()).unwrap_or("-".into()));
++            diag!("[env] updater endpoints={:?} pubkey={}", compiled_endpoints(&h).iter().map(|u| u.to_string()).collect::<Vec<_>>(), if pubkey_is_test(&h) { "TEST-ONLY (B8AC8CD75A1001F5)" } else { "production" });
++            diag!("[env] settings on_launch={} close_action={} rev={}", s.on_launch, s.close_action, s.rev);
+             let (mut w0, mut h0) = parse_size(&s.window_size).unwrap_or((1440.0, 900.0));
+             let mut maximized = false;
+             if let (true, Some(g)) = (s.remember_window, s.window.as_ref()) { w0 = g.w; h0 = g.h; maximized = g.maximized; }
+@@ -646,7 +827,7 @@
+             let w = harden(&h, b).build()?;
+             after_build(&w);
+             if zoom_of(&s) != 1.0 { let _ = w.set_zoom(zoom_of(&s)); }
+-            if hidden { make_tray(&h)?; println!("[start] autostart → hidden in the tray"); }
++            if hidden { make_tray(&h)?; diag!("[start] autostart → hidden in the tray"); }
+             Ok(())
+         })
+         .on_window_event(|window, event| {
+@@ -680,3 +861,20 @@
+         .run(tauri::generate_context!())
+         .expect("error while starting the SOLFALL Launcher");
+ }
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++    #[test]
++    fn open_allowlist() {
++        let ok = |s: &str| open_allowed(&s.parse().unwrap());
++        assert!(ok("https://discord.gg/scyet8grSR"));
++        assert!(ok("https://www.patreon.com/cw/solfall"));
++        assert!(ok("https://solfall.online/#/roadmap"));
++        assert!(!ok("http://discord.gg/x"));
++        assert!(!ok("file:///C:/Windows/System32/calc.exe"));
++        assert!(!ok("https://evil.example/discord.gg"));
++        assert!(!ok("https://discord.gg.evil.example/"));
++        assert!(!ok("https://user@solfall.online/"));
++    }
++}

@@ -1,0 +1,15 @@
+reset /workspace/solfall-launcher/e2e/gh-sim
+v0.2.1: publicado
+{
+  "owner": "CrystalFVPM-DEV",
+  "repo": "SOLFALL-Launcher-by-CrystalFVPM",
+  "latest": null,
+  "releases": [
+    {
+      "tag": "v0.2.1",
+      "draft": false,
+      "prerelease": false,
+      "created": 1794596691155
+    }
+  ]
+}

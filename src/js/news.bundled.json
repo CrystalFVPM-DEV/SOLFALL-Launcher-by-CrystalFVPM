@@ -1,0 +1,108 @@
+{
+  "schema_version": 3,
+  "updated": "2026-11-13",
+  "links": {
+    "roadmap": "https://solfall.online/#/roadmap",
+    "patch_notes": "https://solfall.online/#/roadmap",
+    "website": "https://solfall.online/",
+    "patreon": "https://www.patreon.com/cw/solfall",
+    "discord": "https://discord.gg/scyet8grSR"
+  },
+  "featured": {
+    "title": "Strange New Worlds",
+    "text": "Planet surfaces for every planet and moon in SolFall. A whole new part of the game: somewhere to land, explore, meet other players and write your own stories.",
+    "status": "in_progress",
+    "url": "https://solfall.online/#/roadmap",
+    "image": null,
+    "source": "https://solfall.online/#/roadmap"
+  },
+  "roadmap": [
+    {
+      "title": "Boots on the Deck",
+      "status": "done",
+      "when": "OCT 2026",
+      "source": "https://solfall.online/#/roadmap"
+    },
+    {
+      "title": "Strange New Worlds",
+      "status": "in_progress",
+      "when": "NOW",
+      "source": "https://solfall.online/#/roadmap"
+    },
+    {
+      "title": "Ships Revisited",
+      "status": "next_up",
+      "when": "NEXT",
+      "source": "https://solfall.online/#/roadmap"
+    }
+  ],
+  "patch_notes": [
+    {
+      "date": "2026-11-11",
+      "kind": "FIX",
+      "title": "Selling crafted hulls",
+      "summary": [
+        "The market said nothing to list for a crafted hull sitting in your station storage, at every station. Crafted hulls list and sell like modules and turrets now."
+      ],
+      "url": "https://solfall.online/#/roadmap",
+      "source": "https://solfall.online/data/updates.json"
+    },
+    {
+      "date": "2026-11-11",
+      "kind": "FIX",
+      "title": "Missiles follow your lock",
+      "summary": [
+        "A missile locked on a pirate often flew into a different pirate or a nearby pilot instead. Locked missiles now go for the ship you locked and stay on it until it dies.",
+        "Other pilots saw your missiles chase the nearest ship, not the one you locked. Everyone now sees your missiles fly at the same target you locked."
+      ],
+      "url": "https://solfall.online/#/roadmap",
+      "source": "https://solfall.online/data/updates.json"
+    },
+    {
+      "date": "2026-11-11",
+      "kind": "FIX",
+      "title": "Hulls on the market, missiles and safer mining",
+      "summary": [
+        "Crafted hulls could not be listed on the market. It said there were not enough in station storage. Crafted hulls list and sell like modules now, and the buyer gets that exact hull.",
+        "Locked missiles flew past swarm hives into the empty space around them. Missiles now steer at a live bug in the swarm, and on ships they aim at the hull itself.",
+        "A gentle bump into an asteroid could wear through to a reactor and blow up a loaded ship. Slow bumps only scratch the outer plating now. Hard rams still do real damage."
+      ],
+      "url": "https://solfall.online/#/roadmap",
+      "source": "https://solfall.online/data/updates.json"
+    },
+    {
+      "date": "2026-11-11",
+      "kind": "BALANCE",
+      "title": "Pirates can be beaten",
+      "summary": [
+        "Pirates were almost impossible to kill. Stacks of missiles barely scratched them. A pirate now goes down after about twenty missiles, and its hull bar drops with every hit.",
+        "Pirates chased you from system to system and never gave up. They hunt in the system where they found you. Leave it and they let you go.",
+        "Pirates flew straight through asteroids. They fly around rocks now."
+      ],
+      "url": "https://solfall.online/#/roadmap",
+      "source": "https://solfall.online/data/updates.json"
+    },
+    {
+      "date": "2026-11-07",
+      "kind": "FIX",
+      "title": "Patreon and your pilot",
+      "summary": [
+        "Signing in with Patreon by mistake made a new empty account, and that Patreon could then never be connected to the account with your pilots. Connecting Patreon from your real account now brings it over from the empty one, with your supporter status, and the empty account is removed."
+      ],
+      "url": "https://solfall.online/#/roadmap",
+      "source": "https://solfall.online/data/updates.json"
+    },
+    {
+      "date": "2026-11-07",
+      "kind": "FEATURE",
+      "title": "Patreon supporters, one account and supporter tags",
+      "summary": [
+        "You could only sign in with Google or Discord. You can now sign in with Patreon too.",
+        "Signing in with a different key gave you a separate account. In PILOTS you can connect Google, Discord and Patreon to the same account, and any of them signs you in.",
+        "There was no way to back the game and get something for it. SolFall is in Early Access on Patreon. The banner in PILOTS shows the tiers and what each one gets you."
+      ],
+      "url": "https://solfall.online/#/roadmap",
+      "source": "https://solfall.online/data/updates.json"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+# Validates content/news.json (launcher news, edited by hand on github.com) on every push/PR that touches it.
+# A red X on the commit means the file is broken; the launcher keeps showing its last good copy until it's fixed.
+# Runs scripts/validate-content.mjs (no dependencies). Read-only token.
+name: validate-content
+
+on:
+  push:
+    paths: ['content/**', 'scripts/validate-content.mjs', '.github/workflows/validate-content.yml']
+  pull_request:
+    paths: ['content/**', 'scripts/validate-content.mjs', '.github/workflows/validate-content.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+
+      - name: Validate content/news.json
+        run: node scripts/validate-content.mjs content/news.json

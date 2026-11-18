@@ -17,7 +17,10 @@
   <img class="l-star-shadow" src="assets/star-shadow.png" alt="" aria-hidden="true">
   <img class="l-star" src="assets/star-warm.png" alt="">
   <div class="l-star-glow" aria-hidden="true"></div>
+  <div class="l-corona" id="corona" aria-hidden="true"></div>
+  <div class="l-flares" aria-hidden="true"><i class="flare" style="left:902px;top:535px;transform:rotate(-37deg)"></i><i class="flare" style="left:839px;top:593px;transform:rotate(-48deg)"></i><i class="flare" style="left:788px;top:661px;transform:rotate(-59deg)"></i><i class="flare" style="left:751px;top:738px;transform:rotate(-70deg)"></i><i class="flare" style="left:731px;top:814px;transform:rotate(-80deg)"></i></div>
   <div class="l-flare"></div>
+  <div class="fleet" id="fleet" aria-hidden="true"></div>
   <img class="rock far drift" style="left:600px;top:120px;width:60px;--r:20deg" src="assets/rock4.png" alt="">
   <img class="rock far" style="left:1010px;top:560px;width:50px" src="assets/rock6.png" alt="">
   <img class="rock drift" style="left:880px;top:180px;width:162px;--r:-15deg" src="assets/rock3.png" alt="">
@@ -105,15 +108,19 @@
         <div class="srow "><div class="lab"><b>Window size</b><small>Minimum 1280 × 720.</small></div><div class="selw"><button class="sel" id="sSize" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Window size" style="min-width:150px"><span class="selt"></span><svg viewBox="0 0 10 10" aria-hidden="true"><rect x="0" y="2" width="2" height="2"/><rect x="2" y="4" width="2" height="2"/><rect x="4" y="6" width="2" height="2"/><rect x="6" y="4" width="2" height="2"/><rect x="8" y="2" width="2" height="2"/></svg></button><div class="lbx" role="listbox" hidden><div role="option" data-v="1280x720" aria-selected="false">1280 × 720</div><div role="option" data-v="1440x900" aria-selected="false">1440 × 900</div><div role="option" data-v="1600x1000" aria-selected="false">1600 × 1000</div><div role="option" data-v="1920x1080" aria-selected="false">1920 × 1080</div></div></div></div>
         <div class="srow "><div class="lab"><b>Remember size &amp; maximised</b><small>Reopens the way you left it.</small></div><button class="tgl" type="button" role="switch" id="sRemember" aria-checked="false" aria-label="Remember window"><i></i></button></div>
         <div class="srow "><div class="lab"><b>UI scale</b></div><div class="selw"><button class="sel" id="sScale" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="UI scale" style="min-width:170px"><span class="selt"></span><svg viewBox="0 0 10 10" aria-hidden="true"><rect x="0" y="2" width="2" height="2"/><rect x="2" y="4" width="2" height="2"/><rect x="4" y="6" width="2" height="2"/><rect x="6" y="4" width="2" height="2"/><rect x="8" y="2" width="2" height="2"/></svg></button><div class="lbx" role="listbox" hidden><div role="option" data-v="auto" aria-selected="false">Match Windows</div><div role="option" data-v="100" aria-selected="false">100 %</div><div role="option" data-v="125" aria-selected="false">125 %</div><div role="option" data-v="150" aria-selected="false">150 %</div></div></div></div>
-        <div class="srow "><div class="lab"><b>Reduce motion</b><small>Stops drifting rocks and fades. Follows Windows until changed.</small></div><button class="tgl" type="button" role="switch" id="sMotion" aria-checked="false" aria-label="Reduce motion"><i></i></button></div>
+        <div class="srow "><div class="lab"><b>Reduce motion</b><small>Stops the animated background, drifting rocks and fades. Follows Windows until changed.</small></div><button class="tgl" type="button" role="switch" id="sMotion" aria-checked="false" aria-label="Reduce motion"><i></i></button></div>
       </section></div>
       <div class="set-col"><section class="panel" aria-labelledby="s-aud"><i class="cutline"></i>
         <div class="ptitle" id="s-aud">Audio<span class="r">04</span></div>
         <div class="srow "><div class="lab"><b>Volume</b></div><div class="sld" id="sVol" role="slider" tabindex="0" aria-label="Volume" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" style="--v:50%"><i></i></div><span class="sval" id="sVolV">50</span></div>
         <div class="srow "><div class="lab"><b>Music</b><small><span>SOLFALL Theme · Kain Horsfield</span></small></div><button class="tgl" type="button" role="switch" id="sMusic" aria-checked="false" aria-label="Music"><i></i></button></div>
         <div class="srow sub" id="sMVolRow"><div class="lab"><b>Music volume</b></div><div class="sld" id="sMVol" role="slider" tabindex="0" aria-label="Music volume" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" style="--v:50%"><i></i></div><span class="sval" id="sMVolV">50</span></div>
+      </section><section class="panel" aria-labelledby="s-prf"><i class="cutline"></i>
+        <div class="ptitle" id="s-prf">Performance<span class="r">05</span></div>
+        <div class="srow " id="sAnimBgRow"><div class="lab"><b>Animated background</b><small id="sAnimBgNote">Ships crossing and flares on the star. Pauses whenever the launcher is not in front.</small></div><button class="tgl" type="button" role="switch" id="sAnimBg" aria-checked="true" aria-label="Animated background"><i></i></button></div>
+        <div class="srow "><div class="lab"><b>Performance mode</b><small>Turns off every animation and the glass blur. Lowest CPU.</small></div><button class="tgl" type="button" role="switch" id="sPerf" aria-checked="false" aria-label="Performance mode"><i></i></button></div>
       </section><section class="panel grow" aria-labelledby="s-abt"><i class="cutline"></i>
-        <div class="ptitle" id="s-abt">About<span class="r">05</span></div>
+        <div class="ptitle" id="s-abt">About<span class="r">06</span></div>
         <div class="kv" style="margin-top:6px"><span>SOLFALL Launcher</span><b class="num" id="sVer2">—</b></div>
         <div class="kv" id="sBuildRow" hidden><span>Build</span><b id="sBuild" style="color:var(--sun)"></b></div>
         <div class="kv"><span>Site</span><a href="#" data-link="web">solfall.online ↗</a></div>

@@ -1,0 +1,2 @@
+{"label": "v040perf-focused-1", "procs": 3, "names": ["WebKitNetworkPr", "WebKitWebProces", "solfall-0.4.0"], "pss_mb_avg": 244.6, "pss_mb_max": 244.6, "rss_mb_avg": 434.8, "cpu_pct_1core": 0.0, "window_s": 60.0, "active_window": "SOLFALL", "bg_log": "bg pause performance-mode"}
+{"label": "v040bgoff-focused-1", "procs": 3, "names": ["WebKitNetworkPr", "WebKitWebProces", "solfall-0.4.0"], "pss_mb_avg": 243.4, "pss_mb_max": 244.0, "rss_mb_avg": 433.6, "cpu_pct_1core": 8.3, "window_s": 60.0, "active_window": "SOLFALL", "bg_log": "bg pause setting-off"}

@@ -1,6 +1,6 @@
 [package]
 name = "solfall-launcher"
-version = "0.3.0"
+version = "0.4.0"
 edition = "2021"
 description = "SOLFALL Launcher (Tauri v2: WebView2 / WKWebView / WebKitGTK)"
 

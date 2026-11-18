@@ -3641,7 +3641,7 @@ dependencies = [
 
 [[package]]
 name = "solfall-launcher"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "reqwest",
  "rustls",

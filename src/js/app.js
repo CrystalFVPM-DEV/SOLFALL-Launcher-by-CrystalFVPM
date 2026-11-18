@@ -3,6 +3,7 @@
 // data-view="settings": Settings view on top of any state.
 import { createNewsClient, localStorageAdapter, compareVersions, DEFAULT_NEWS_URL } from './news-client.mjs';
 import { LINKS } from './config.js';
+import { createBackground } from './background.js';
 
 const T = window.__TAURI_INTERNALS__;
 const invoke = (cmd, args) => T ? T.invoke(cmd, args) : Promise.reject(new Error('no Tauri'));
@@ -22,12 +23,14 @@ const COPY = {
            jamie: '“Comms are dead, pilot. Not our hull. Give it a moment and try again.”' },
 };
 
+let bg = null; // animated background controller (created below, js/background.js)
 const READY_COPY = { h1: 'Star’s up. <em>Engines warm.</em>', lede: null, jamie: '“Console update’s ready when you are, pilot. No rush at all.”' };
 const S = {
   state: 'main', info: null, manifest: null, pingMs: null, upd: null, prog: { downloaded: 0, total: 0 },
   attempt: 0, err: null, notice: null, lastPatch: null, feedLinks: {}, forced: false, graceTimer: null, t0: 0, ready: false, checkedAt: null,
   set: { autostart: false, start_minimized: false, close_action: 'quit', game_fullscreen: false, on_launch: 'replace', auto_update: true,
-         window_size: '1440x900', remember_window: true, ui_scale: 'auto', reduce_motion: null, volume: 0.8, music: false, music_volume: 0.6 },
+         window_size: '1440x900', remember_window: true, ui_scale: 'auto', reduce_motion: null, volume: 0.8, music: false, music_volume: 0.6,
+         animated_background: true, performance_mode: false },
 };
 
 // ---------- render ----------
@@ -87,6 +90,8 @@ function render() {
 
 // State swap: fade out → swap → fade in (WAAPI, opacity only). Same-state re-renders (progress) are instant.
 const reduced = () => $('app').dataset.motion === 'reduced' || ($('app').dataset.motion !== 'full' && matchMedia('(prefers-reduced-motion: reduce)').matches);
+// Performance mode (0.4.0) implies reduced UI motion as well (short fades, no loops).
+const calm = () => reduced() || $('app').dataset.perf === 'on';
 let swapping = Promise.resolve();
 function go(state) {
   if (state === 'launcher-update-ready') { S.ready = true; state = 'main'; } // 0.2.0: ready is a sub-state of main
@@ -94,7 +99,7 @@ function go(state) {
   if (key === S.lastKey) { S.state = state; render(); return swapping; }
   S.lastKey = key;
   const els = ['launchBody', 'h1', 'lede', 'jamie', 'pill'].map($).filter(Boolean);
-  const dur = reduced() ? { duration: 80 } : { duration: 200, easing: 'cubic-bezier(.16,1,.3,1)' };
+  const dur = calm() ? { duration: 80 } : { duration: 200, easing: 'cubic-bezier(.16,1,.3,1)' };
   swapping = swapping.then(async () => {
     if (document.hidden) { S.state = state; render(); return; }
     await Promise.all(els.map(el => el.animate([{ opacity: 1 }, { opacity: 0 }], { ...dur, fill: 'forwards' }).finished.catch(() => {})));
@@ -151,7 +156,7 @@ async function launch() {
   const url = S.manifest?.game?.url || S.info.default_game_url;
   // "Open in this window": the launcher UI is discarded by the navigation (nothing of it stays in memory).
   music.pause();
-  try { const mode = await invoke('launch_game', { url }); log('launch mode=' + mode); } catch (e) { S.err = { code: 'SF-LCH-001', title: String(e), what: 'Game URL' }; go('error'); }
+  try { const mode = await invoke('launch_game', { url }); log('launch mode=' + mode); if (mode !== 'replace' && bg) bg.win({ game: true }); } catch (e) { S.err = { code: 'SF-LCH-001', title: String(e), what: 'Game URL' }; go('error'); }
 }
 
 function startBlockingUpdate() {
@@ -254,7 +259,7 @@ async function boot(isRetry = false) {
   }
   applyLinks();
   go('main');
-  loadNews(m).catch(e => console.warn('news', e));
+  loadNews(m).catch(e => { console.warn('news', e); log('news render failed ' + String(e).slice(0, 120)); });
   // Updates: ALWAYS checked. The manifest may suggest an endpoint (Rust validates it against an allowlist);
   // without manifest (or if not allowed) the compiled endpoints (GitHub Releases) are used.
   const minV = m?.min_launcher_version?.windows; const blocked = (m?.kill_switch?.blocked_versions || []).includes(S.info.version);
@@ -323,6 +328,8 @@ function flashSaved() { const el = $('sSaved'); el.innerHTML = '<b>✓ Saved</b>
 function applySettings() {
   const app = $('app');
   if (S.set.reduce_motion === true) app.dataset.motion = 'reduced'; else if (S.set.reduce_motion === false) app.dataset.motion = 'full'; else delete app.dataset.motion;
+  app.dataset.perf = S.set.performance_mode ? 'on' : 'off';
+  if (bg) { bg.setPrefs({ animated: S.set.animated_background, perf: S.set.performance_mode }); driftSync(); }
   music.volume = Math.min(1, Math.max(0, S.set.volume * S.set.music_volume));
   if (!S.set.music) { music.pause(); playWanted = false; } else tryPlay();
   $('wSound').classList.toggle('on', !!S.set.music);
@@ -330,7 +337,8 @@ function applySettings() {
   $('np').classList.toggle('off', !S.set.music);
 }
 const SELECTS = { sOnLaunch: 'on_launch', sSize: 'window_size', sScale: 'ui_scale' };
-const TOGGLES = { sAuto: 'autostart', sAutoMin: 'start_minimized', sFull: 'game_fullscreen', sAutoUpd: 'auto_update', sRemember: 'remember_window', sMusic: 'music' };
+const TOGGLES = { sAuto: 'autostart', sAutoMin: 'start_minimized', sFull: 'game_fullscreen', sAutoUpd: 'auto_update', sRemember: 'remember_window', sMusic: 'music',
+  sAnimBg: 'animated_background', sPerf: 'performance_mode' };
 const SLIDERS = { sVol: 'volume', sMVol: 'music_volume' };
 const osReduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 function renderSettings() {
@@ -354,6 +362,11 @@ function renderSettings() {
   // dependent rows
   $('sAutoMinRow').classList.toggle('dis', !S.set.autostart); $('sAutoMin').classList.toggle('off', !S.set.autostart);
   $('sMVolRow').classList.toggle('dis', !S.set.music);
+  // Animated background: overridden (shown off, disabled) by Performance mode and by reduced motion (OS or Settings).
+  const bgBlock = S.set.performance_mode ? 'Off while Performance mode is on.' : reduced() ? 'Off while Reduce motion is on.' : '';
+  $('sAnimBgRow').classList.toggle('dis', !!bgBlock); $('sAnimBg').classList.toggle('off', !!bgBlock);
+  $('sAnimBg').setAttribute('aria-checked', String(!!S.set.animated_background && !bgBlock));
+  $('sAnimBgNote').textContent = bgBlock || 'Ships crossing and flares on the star. Pauses whenever the launcher is not in front.';
   const big = S.win?.maximized || S.win?.fullscreen; $('sSize').classList.toggle('off', !!big);
   $('sSize').title = big ? 'Restore the window to change its size' : '';
 }
@@ -371,13 +384,14 @@ function closeSettings() {
   let fin = false;
   const done = () => { if (fin) return; fin = true; panel.hidden = true; delete app.dataset.view; $('wSettings').focus(); };
   panel.addEventListener('transitionend', function te(e) { if (e.target === panel && e.propertyName === 'opacity') { panel.removeEventListener('transitionend', te); done(); } });
-  setTimeout(done, reduced() ? 90 : 320); // also covers a missing transitionend
+  setTimeout(done, calm() ? 90 : 320); // also covers a missing transitionend
   log('view main');
 }
 const act = (el, f) => { el.onclick = (e) => { e.preventDefault(); f(e); }; el.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); f(e); } }; };
 act($('sBack'), closeSettings);
 for (const [id, k] of Object.entries(TOGGLES)) act($(id), () => {
   if (id === 'sAutoMin' && !S.set.autostart) return;
+  if (id === 'sAnimBg' && $('sAnimBg').classList.contains('off')) return;
   S.set[k] = !S.set[k]; saveSettings();
 });
 act($('sMotion'), () => { S.set.reduce_motion = !(S.set.reduce_motion ?? osReduced()); saveSettings(); });
@@ -496,7 +510,9 @@ window.addEventListener('focus', setFocused); window.addEventListener('blur', se
 document.addEventListener('visibilitychange', setFocused); setFocused();
 
 // Hooks for the tray menu (Rust evals these on the LOCAL launcher page only).
-window.__solfall = { launch: () => launch(), checkUpdates: () => checkUpdates(S.manifest?.updates?.['windows-tauri']?.url || null) };
+window.__solfall = { launch: () => launch(), checkUpdates: () => checkUpdates(S.manifest?.updates?.['windows-tauri']?.url || null),
+  // Native window state from Rust (0.4.0): { focused, minimized, game } → background + CSS loops pause.
+  win: (st) => { if (bg) bg.win(st); driftSync(); } };
 
 // ---------- rock drift stepper (transform only; pauses with the window; off under reduced motion) ----------
 const DRIFT = { period: 18000, steps: 28 };
@@ -509,7 +525,7 @@ function driftTick() {
   for (const d of driftEls) d.el.style.transform = `translate(${(-14 * p).toFixed(2)}px,${(6 * p).toFixed(2)}px) rotate(${(d.r + 4 * p).toFixed(2)}deg)`;
 }
 function driftSync() {
-  const run = $('app').dataset.focused !== 'false' && !reduced() && !document.hidden;
+  const run = $('app').dataset.focused !== 'false' && $('app').dataset.win !== 'inactive' && !calm() && !document.hidden;
   if (run && !driftT) { driftTick(); driftT = setInterval(driftTick, DRIFT.period / DRIFT.steps); }
   else if (!run && driftT) { clearInterval(driftT); driftT = null; }
 }
@@ -519,10 +535,19 @@ new MutationObserver(driftSync).observe($('app'), { attributes: true, attributeF
 matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', driftSync);
 driftSync();
 
+// ---------- animated background (0.4.0, js/background.js) ----------
+bg = createBackground({ app: $('app'), layer: $('fleet'), corona: $('corona'), flares: [...document.querySelectorAll('.l-flares .flare')], log, reduced });
+bg.setPrefs({ animated: S.set.animated_background, perf: S.set.performance_mode });
+const bgSync = () => { bg.sync(); driftSync(); };
+['focus', 'blur'].forEach(e => window.addEventListener(e, () => setTimeout(bgSync)));
+document.addEventListener('visibilitychange', () => setTimeout(bgSync));
+new MutationObserver(() => bg.sync()).observe($('app'), { attributes: true, attributeFilter: ['data-motion', 'data-focused', 'data-view', 'data-state'] });
+matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', () => { bgSync(); renderSettings(); });
+
 // ---------- start ----------
 render();
 (async () => {
-  try { S.info = await invoke('launcher_info'); $('app').dataset.platform = S.info.platform; platformCopy(); } catch {}
+  try { S.info = await invoke('launcher_info'); $('app').dataset.platform = S.info.platform; platformCopy(); bg.setBigPulse(S.info.platform !== 'linux'); } catch {}
   await loadSettings(); renderSettings(); syncWin();
   if (S.info?.demo_view === 'settings') setTimeout(openSettings, 300);
   await boot();

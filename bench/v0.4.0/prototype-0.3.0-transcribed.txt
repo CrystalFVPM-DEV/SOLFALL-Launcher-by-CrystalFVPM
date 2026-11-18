@@ -1,0 +1,4 @@
+# Transcribed from console output, 18-11-2026 (box), bench/states.sh-equivalent script, 60 s per state, % of one core.
+# Raw JSON lines were lost when the box was reset; these are the printed values.
+0.3.0 (no fleet, aef3931 tree)            focused  8.5
+0.3.0 + deferred fleet prototype          focused 19.9 | unfocused-xclock 24.8 (active window SOLFALL, no blur logged) | unfocused (xmessage) 0.0 (blur logged) | minimised 0.0

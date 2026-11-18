@@ -147,6 +147,10 @@ struct Settings {
     /// Music on/off (spec default OFF) and its relative volume (default 0.6).
     music: bool,
     music_volume: f64,
+    /// 0.4.0 Settings → Performance: animated background (ships + star corona), on by default.
+    animated_background: bool,
+    /// 0.4.0 Settings → Performance: no animations at all and no glass blur.
+    performance_mode: bool,
     /// Settings format revision. Files without it (0.2.0) get the 0.2.1 default on_launch = "replace".
     #[serde(default)]
     rev: u32,
@@ -159,7 +163,8 @@ impl Default for Settings {
         Settings {
             autostart: false, start_minimized: false, close_action: "quit".into(), game_fullscreen: false,
             on_launch: "replace".into(), auto_update: true, window_size: "1440x900".into(), remember_window: true,
-            window: None, ui_scale: "auto".into(), reduce_motion: None, volume: 0.8, music: false, music_volume: 0.6, rev: SETTINGS_REV,
+            window: None, ui_scale: "auto".into(), reduce_motion: None, volume: 0.8, music: false, music_volume: 0.6,
+            animated_background: true, performance_mode: false, rev: SETTINGS_REV,
         }
     }
 }
@@ -246,6 +251,8 @@ struct AppState {
     downloading: AtomicBool,
     error: Mutex<Option<String>>,
     in_game: AtomicBool,
+    /// 0.4.0: a separate "game" window exists (set on build, cleared on Destroyed) → launcher background paused.
+    game_window: AtomicBool,
 }
 static POPUP_SEQ: AtomicUsize = AtomicUsize::new(0);
 
@@ -571,11 +578,24 @@ fn open_link(url: String) -> Result<(), String> {
     Ok(())
 }
 
-fn ui_call(app: &AppHandle, f: &str) {
+fn ui_call(app: &AppHandle, f: &str) { ui_call_with(app, f, ""); }
+/// Calls a hook exposed by app.js (window.__solfall.<f>(<arg>)) on the LOCAL launcher page only, never the game page.
+fn ui_call_with(app: &AppHandle, f: &str, arg: &str) {
     if let Some(m) = app.get_webview_window("main") {
         let local = m.url().map(|u| nav_allowed(&u) && !u.host_str().map(host_allowed).unwrap_or(false)).unwrap_or(false);
-        if local { let _ = m.eval(format!("window.__solfall && window.__solfall.{f} && window.__solfall.{f}()")); }
+        if local { let _ = m.eval(format!("window.__solfall && window.__solfall.{f} && window.__solfall.{f}({arg})")); }
     }
+}
+/// 0.4.0: native window state → the launcher page (the animated background and CSS loops pause on anything but
+/// "launcher focused, not minimised, no game window"). The webview's own blur/visibility events are kept as well.
+/// `focused` / `game` override the queried values when the event itself carries them (Focused(f), game Destroyed).
+fn push_win_state(app: &AppHandle, focused: Option<bool>, game: Option<bool>) {
+    let Some(m) = app.get_webview_window("main") else { return };
+    let focused = focused.unwrap_or_else(|| m.is_focused().unwrap_or(true));
+    let minimized = m.is_minimized().unwrap_or(false) || !m.is_visible().unwrap_or(true);
+    if let Some(g) = game { app.state::<AppState>().game_window.store(g, Ordering::SeqCst); }
+    let game = app.state::<AppState>().game_window.load(Ordering::SeqCst);
+    ui_call_with(app, "win", &format!("{{focused:{focused},minimized:{minimized},game:{game}}}"));
 }
 fn show_launcher(app: &AppHandle) {
     if let Some(m) = app.get_webview_window("main") {
@@ -647,6 +667,7 @@ async fn launch_game(app: AppHandle, url: String) -> Result<String, String> {
     let g = harden(&app, b).build().map_err(|e| { diag!("[launch] game window failed: {e}"); e.to_string() })?;
     after_build(&g);
     diag!("[launch] game window created");
+    push_win_state(&app, None, Some(true)); // launcher background → 0 % while the game window exists
     match s.on_launch.as_str() {
         "tray" => { make_tray(&app).map_err(|e| e.to_string())?; save_geometry(&app); let _ = main.hide(); }
         "close" => { save_geometry(&app); let _ = main.destroy(); }
@@ -881,6 +902,10 @@ fn main() {
             let app = window.app_handle().clone();
             match event {
                 WindowEvent::Focused(_) | WindowEvent::Resized(_) => {
+                    if window.label() == "main" {
+                        let f = if let WindowEvent::Focused(f) = event { Some(*f) } else { None };
+                        push_win_state(&app, f, None);
+                    }
                     let _low = window.is_minimized().unwrap_or(false);
                     #[cfg(windows)]
                     if let Some(w) = app.get_webview_window(window.label()) { win2::set_memory_low(&w, _low); }
@@ -899,6 +924,7 @@ fn main() {
                     // Separate game window closed → bring the launcher back (minimised or in the tray).
                     if window.label() == "game" {
                         app.state::<AppState>().in_game.store(false, Ordering::SeqCst);
+                        push_win_state(&app, None, Some(false));
                         show_launcher(&app);
                     }
                 }
@@ -923,6 +949,20 @@ mod tests {
         assert!(!ok("https://evil.example/discord.gg"));
         assert!(!ok("https://discord.gg.evil.example/"));
         assert!(!ok("https://user@solfall.online/"));
+    }
+}
+#[cfg(test)]
+mod tests_settings {
+    #[test]
+    fn settings_from_0_3_0_get_the_0_4_0_defaults() {
+        // A 0.3.0 settings.json has no Performance keys: the animated background must default to ON, Performance mode OFF.
+        let old = r#"{"autostart":false,"start_minimized":false,"close_action":"quit","game_fullscreen":false,"on_launch":"replace",
+            "auto_update":true,"window_size":"1440x900","remember_window":true,"window":null,"ui_scale":"auto","reduce_motion":null,
+            "volume":0.8,"music":false,"music_volume":0.6,"rev":2}"#;
+        let s = super::sanitize(serde_json::from_str::<super::Settings>(old).unwrap());
+        assert!(s.animated_background && !s.performance_mode && s.on_launch == "replace");
+        let s: super::Settings = serde_json::from_str(r#"{"animated_background":false,"performance_mode":true,"rev":2}"#).unwrap();
+        assert!(!s.animated_background && s.performance_mode);
     }
 }
 #[cfg(test)]

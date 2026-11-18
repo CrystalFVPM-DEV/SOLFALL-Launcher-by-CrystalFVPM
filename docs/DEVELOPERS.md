@@ -1,4 +1,4 @@
-# SOLFALL Launcher 0.3.0: developer notes
+# SOLFALL Launcher 0.4.0: developer notes
 
 Technical documentation for the launcher (player instructions: [README](../README.md)). Paths below are relative to
 the repository root.
@@ -10,7 +10,12 @@ the repository root.
 Tauri v2: WebView2 on Windows, WKWebView on macOS, WebKitGTK on Linux. The launcher shows news, keeps itself up to date with
 signed packages and, on **LAUNCH**, turns **the same window** into `https://play.solfall.online` (one webview, like 0.1.0).
 
-**0.3.0 adds macOS (universal .dmg) and Linux (AppImage + .deb).** The Windows build is unchanged (Windows-only code stays
+**0.4.0 adds the animated background**: Solfall ships cross the sky now and then (sometimes a pirate chasing a Dart,
+lasers included) and flares flicker on the star's limb (§4, §6). It runs only while the launcher is the focused, visible
+window with no game window open, and can be turned off in *Settings → Performance* (also *Performance mode*). Same
+updater key and endpoint as 0.3.0, so 0.3.0 updates to it normally.
+
+**0.3.0 added macOS (universal .dmg) and Linux (AppImage + .deb).** The Windows build is unchanged (Windows-only code stays
 behind `cfg(windows)`). Fix found while testing: with *Update automatically* off the news fetch panicked (no TLS crypto
 provider installed yet) and news never loaded; the provider is now installed at startup (all platforms). 0.2.1 fixed the 0.2.0 LAUNCH bug on Windows: [ROOT-CAUSE-0.2.1.md](ROOT-CAUSE-0.2.1.md).
 
@@ -140,6 +145,7 @@ Opened with ⚙ (title bar or next to LAUNCH), closed with **Back** or **Esc**. 
 | Updates | Update the launcher automatically · Channel **Stable** (shown, disabled) · version · last checked · Check now | on |
 | Display | Window size (min 1280×720; disabled while maximised) · Remember size & maximised · UI scale (Match Windows/100/125/150 %) · Reduce motion (follows Windows until changed) | 1440×900 · on · Match Windows · follow OS |
 | Audio | Volume · Music · Music volume | 80 % · **off** · 60 % |
+| Performance (0.4.0) | **Animated background** (ships + star flares; shown off and disabled while Reduce motion or Performance mode is on) · **Performance mode** (no animation at all, no glass blur, short fades) | **on** · off |
 | About | version, solfall.online, Discord, **Open logs folder**, the assets line (a *Build* row appears only in debug builds or with `SOLFALL_DEBUG=1`) | |
 
 Music: when on, it starts on launch (WebView2 runs with `--autoplay-policy=no-user-gesture-required`); if the engine still
@@ -157,6 +163,16 @@ blocks it, it starts on the first click/key. The ♪ button in the title bar and
   **All assets are FINAL** (`branding/active/SOURCES.txt`); no temporary asset is used.
 * Animations: transform/opacity only, paused when the window is unfocused, minimised or hidden, and off with
   `prefers-reduced-motion` or *Reduce motion*.
+* Animated background (0.4.0, `src/js/background.js`): one `setTimeout` loop (8 fps while a ship flies, 4 Hz for the
+  star otherwise; no `requestAnimationFrame`, no infinite CSS animation). Ships: pre-tinted sprites from
+  `tools/bake-fleet.py` (Solfall's public ship art), one crossing every 14–34 s (22–30 s each, 20 % skirmishes),
+  lane between the title bar and Jamie's strip; while a ship is fully behind the news panels it is hidden and not moved.
+  Star: 5 small flares on the visible limb (opacity in 0.2 steps); the big corona ring pulses only on Windows/macOS,
+  where opacity is composited on the GPU, and is static on Linux. It **stops** (timer and pending spawn cleared, CSS loops
+  `animation-play-state: paused`) on: window blur, `visibilitychange`, native `Focused(false)` / minimised / hidden to
+  tray (Rust `push_win_state` → `window.__solfall.win()`), a game window open (`launch_game` / game `Destroyed`), the
+  Settings view, non-main states, Reduce motion (OS or Settings), the setting off, Performance mode. Each reason change
+  is written to the diagnostic log (`[ui] bg run` / `bg pause <reason>`).
 * Links open in the **system browser**. Source, in order: `links` in news.json → manifest `links` → `src/js/config.js`
   (the one place to edit; `null` = hidden). Discord = `links.discord`, falling back to the constant
   `https://discord.gg/scyet8grSR`. Roadmap tab = `links.roadmap` (`https://solfall.online/#/roadmap`); *Patch notes →* =
@@ -194,15 +210,45 @@ blocks it, it starts on the first click/key. The ♪ button in the title bar and
   `option_env!`) plus a `--config` overlay; a runtime environment variable is honoured only in debug builds.
 
 ## 6. Idle CPU and RAM (Linux proxy: WebKitGTK, software rendering, Xvfb; whole process tree; `bench/`)
+**The box has no GPU**: WebKitGTK runs with `WEBKIT_DISABLE_DMABUF_RENDERER=1`, non-composited, everything rasterised on
+the CPU. That is the worst case; Windows (WebView2), macOS (WKWebView) and Linux with a GPU composite `transform` /
+`opacity` layers on the GPU. Those platforms were **not measured**.
+
+0.4.0 animated background (`bench/states.sh`, release build, 60 s per state; raw data and method `bench/v0.4.0/`):
+
+| State | CPU (% of 1 core) |
+|---|---|
+| Focused, idle (3 × 60 s) | **14.3 / 14.9 / 14.5** (avg 14.6) |
+| Unfocused (another window really takes focus) | **0.0** |
+| Minimised | **0.0** |
+| Game window open, launcher in front (launcher page process) | **0.0** (whole tree 288.8 %: that is the game's login page) |
+| Focused, *Performance mode* on | **0.0** (rock drift stopped too) |
+| Focused, *Animated background* off | **8.3** (= 0.3.0: the rock drift) |
+
+Same box, same script: 0.3.0 without fleet 8.5 % focused; the deferred 0.3.0 prototype 19.9 % focused. The number
+depends on what is flying: a 60 s sample dominated by a skirmish reached 20.3 % with the release candidate (same
+background code), samples with single ships 14–15 %. Peaks while a skirmish crosses are higher than the averages.
+
+**The 0.3.0 "14.3 % unfocused" was a measurement error, not a leak.** The 0.3.0 script took focus away with `xclock`,
+which is not installed on the box; `xargs -r` then activated nothing, the launcher stayed the active window and the
+fleet kept flying. Reproduced with the prototype build: 24.8 % with that step (launcher still active, no `blur` in the
+log) and 0.0 % when an `xmessage` window really takes focus (`blur` and the pause logged). `bench/states.sh` keeps that
+flawed step, labelled `unfocused-xclock` (0.4.0: 15.0 %, launcher still active), next to the real `unfocused` state.
+
+What drives the cost here (software rendering): repainted area × the layers under it. An opacity step of an
+800×460 px corona ring at 6 Hz saturated a core (~100 %); 200×200 px at 6 Hz still cost ~30 %. Hence: no big-area
+animation on Linux, small sprites, 8 fps, a compact skirmish formation (~215 px), and no repaint under the news panels.
+
+Earlier releases:
 | Build | Focused idle CPU (% of 1 core) | Minimised | PSS |
 |---|---|---|---|
 | 0.1.0 (before, `bench/v0.2.0/idle-before.jsonl`) | **100.9 %** | 0.1 % | 241 MB |
 | 0.2.0 (after, `bench/v0.2.0/idle-final.jsonl`) | **7.8 %** | 0.0 % | 244 MB |
 | 0.3.0 + animated fleet (prototype, `bench/v0.3.0/idle-fleet-DEFERRED.jsonl`, 36 × 10 s) | **17.5 %** avg (5.9–26.3) | 0.0 % | — |
 
-The animated background (ships crossing, skirmishes) was built and measured for 0.3.0 but **not shipped**: focused idle
-17.5 % (limit 10 %, target 8 %) and 14.3 % while unfocused on this box (limit 0 %). Deferred; the prototype is kept
-outside the repo.
+The animated background was built for 0.3.0 but not shipped then (focused 17.5 %, and a reported 14.3 % "unfocused"
+that turned out to be the measurement error explained above). It ships in 0.4.0 under the CPU limit Voiden approved
+(up to ~17–18 % focused, 0 % unfocused / minimised / game open).
 
 What changed: the star's 160 px drop-shadow filter is baked into PNGs (`tools/bake-star.py`, RMSE 0.77 % vs the CSS
 filter), the rock drift is a low-rate stepper that only runs while focused and visible, and the glow pulse (which
@@ -258,15 +304,15 @@ GitHub Releases (`latest.json` + installer + `.sig` in each release).
   `darwin-aarch64` / `darwin-x86_64` in `latest.json` point to their own tarball; 13 assets). The player README
   documents only the universal `.dmg`; update it if Plan B is ever used.
 
-## 9. Roadmap (not in 0.3.0)
-* Animated background (ships crossing, skirmishes): over the CPU limit in 0.3.0 (§6); needs a cheaper renderer.
+## 9. Roadmap (not in 0.4.0)
 * macOS notarization (Apple Developer Program, 99 USD/year) and a Windows Authenticode certificate: Solfall's decision.
 * A first real run on macOS and Windows of everything listed under *NOT VERIFIED* below.
 * The game's own roadmap is in `content/news.json` (`links.roadmap` → https://solfall.online/#/roadmap).
 
 ## 10. Known limitations
 * Snap Layouts on the custom maximise button: out of scope.
-* Animated background (ships crossing, skirmishes, as on solfall.online): built, measured over the CPU limit, not shipped (§6).
+* Animated background on software-rendered Linux: the star's corona ring is static (only the limb flares move), and a
+  focused launcher uses ~15 % of a core on average while ships fly (§6). *Performance mode* turns it all off.
 * Linux AppImage GStreamer: `bundleMediaFramework` copies **every** plugin in the build machine's GStreamer directory
   (`linuxdeploy-plugin-gstreamer.sh` ignores `GSTREAMER_INCLUDE_BAD_PLUGINS`; it only honours `GSTREAMER_PLUGINS_DIR`).
   CI therefore uses Backend's `scripts/appimage-gstreamer.sh`: `curate` builds a core + base + good (+ alsa) plugin
@@ -282,10 +328,16 @@ GitHub Releases (`latest.json` + installer + `.sig` in each release).
   a Blob URL. Linux is only the test proxy.
 * The installer has no licence page (the licence text is the devs' — placeholder in the spec).
 
+### NOT VERIFIED for 0.4.0 on any real machine
+* CPU of the animated background with a GPU (Windows, macOS, Linux with DMABUF/GL): only the software-rendered box was measured.
+* The update 0.3.0 → 0.4.0 end to end (same pubkey `D78F00A86CB044C7` and endpoint; the 0.3.0 → 0.3.1 path was verified on Linux in 0.3.0).
+* CI (`release.yml` unchanged) building 0.4.0 for Windows, macOS universal and Linux.
+
 ### NOT VERIFIED on macOS (no Mac; the macOS code was type-checked on Linux with `tools/check-macos.sh`, no SDK, no binary)
 * The universal build, the styled .dmg, ad-hoc signing, Gatekeeper first-open steps, `minimumSystemVersion` 10.15.
 * Traffic lights + title bar padding, the app menu (About/Hide/Quit, Edit copy/paste, Window full screen), ⌘, and ⌃⌘F.
 * LAUNCH in the same window on WKWebView, music autoplay (falls back to the first click), the `.app.tar.gz` update.
+* 0.4.0: the animated background pausing on WKWebView (blur / occlusion / native Focused), its CPU, the corona pulse.
 
 ### NOT VERIFIED (no Windows machine; built with cargo-xwin, tested on Linux and under wine)
 * **The 0.2.1 LAUNCH fix on WebView2** (same-window navigation is the 0.1.0 path; the async "New window" modes are also untested on Windows).
@@ -296,13 +348,14 @@ GitHub Releases (`latest.json` + installer + `.sig` in each release).
   WebView2 accelerator handler, which only exists on Windows).
 * WebView2 autoplay of the music (flag set; on Linux music plays after the Blob fallback).
 * Installer look on real Windows (only wine), SmartScreen, the NSIS update/relaunch, WebView2 bootstrap.
-* RAM and CPU on Windows/WebView2, including the cost of the Windows-only glow pulse.
+* RAM and CPU on Windows/WebView2, including the cost of the Windows-only glow pulse and the 0.4.0 corona pulse.
+* 0.4.0 animated background on WebView2: native `Focused`/minimise events → pause, game window ("New window" modes) → pause.
 * Start with Windows (autostart registry entry), tray icon and menu, UI scale (WebView2 zoom), DPI scaling.
 
 ## 11. Layout and build
 `src/` UI (static HTML/CSS/JS; `css/settings.css` = spec copy) · `src-tauri/` Rust · `branding/` installer hooks,
-language file and active art · `tools/` (`assets.sh`, `set-pubkey.mjs`, `build-local.sh`, `bake-star.py`,
-`measure-webview.ps1`) · `bench/` · `evidence/` · `e2e/`, `e2e-windows/` (test only).
+language file and active art · `tools/` (`assets.sh`, `set-pubkey.mjs`, `build-local.sh`, `bake-star.py`, `bake-fleet.py`,
+`measure-webview.ps1`) · `bench/` (`idle.sh`, `states.sh`, `measure-pid.py`) · `evidence/` · `e2e/`, `e2e-windows/` (test only).
 
 * Windows (CI and locally): `npm ci` then `npx tauri build --bundles nsis` (`npm run build`).
 * Cross-build from Linux: `npm run build:win` (cargo-xwin). Box scripts: `tools/build-local.sh win|win-e2e|linux|linux-rel|linux-e2e`.

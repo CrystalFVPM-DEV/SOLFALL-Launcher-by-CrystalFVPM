@@ -1,6 +1,6 @@
 {
   "name": "solfall-launcher",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "description": "SOLFALL Launcher \u2014 Tauri v2 / WebView2",
   "scripts": {

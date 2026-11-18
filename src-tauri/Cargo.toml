@@ -1,8 +1,8 @@
 [package]
 name = "solfall-launcher"
-version = "0.2.1"
+version = "0.3.0"
 edition = "2021"
-description = "SOLFALL Launcher (proposal, Tauri v2 / WebView2)"
+description = "SOLFALL Launcher (Tauri v2: WebView2 / WKWebView / WebKitGTK)"
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
@@ -17,6 +17,9 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 url = "2"
 reqwest = { version = "0.13", default-features = false, features = ["json"] }
+# TLS for our own reqwest client (fetch_news): reqwest gets `rustls-no-provider` from tauri-plugin-updater, which installs
+# the ring provider only when it checks; install it at startup so news works with "Update automatically" off (0.3.0 fix).
+rustls = { version = "0.23", default-features = false, features = ["ring"] }
 
 [target.'cfg(windows)'.dependencies]
 webview2-com = "0.39"

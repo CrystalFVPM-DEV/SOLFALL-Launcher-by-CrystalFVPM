@@ -1,4 +1,5 @@
-// SOLFALL Launcher — Tauri v2 (Windows: WebView2).
+// SOLFALL Launcher — Tauri v2 (Windows: WebView2 · macOS: WKWebView · Linux: WebKitGTK).
+// Platform code: Windows-only parts are behind cfg(windows) (mod win2), macOS-only parts behind cfg(target_os = "macos").
 //
 // Flow: the window starts on the local UI (src/index.html). LAUNCH, by default (0.2.1+, as in 0.1.0), navigates
 // THAT SAME window to play.solfall.online as a top-level document (no iframe: the site sends X-Frame-Options: DENY),
@@ -372,7 +373,9 @@ struct UpdateInfo {
 /// Backend contract v2 extras in latest.json: `notes_url` (root) and `size` (per platform).
 fn raw_extras(raw: &serde_json::Value) -> (Option<String>, Option<u64>) {
     let notes_url = raw.get("notes_url").and_then(|v| v.as_str()).map(String::from);
-    let keys: &[&str] = if cfg!(windows) { &["windows-x86_64-nsis", "windows-x86_64"] } else { &["linux-x86_64-appimage", "linux-x86_64"] };
+    let keys: &[&str] = if cfg!(windows) { &["windows-x86_64-nsis", "windows-x86_64"] }
+        else if cfg!(target_os = "macos") { if cfg!(target_arch = "aarch64") { &["darwin-aarch64-app", "darwin-aarch64"] } else { &["darwin-x86_64-app", "darwin-x86_64"] } }
+        else { &["linux-x86_64-appimage", "linux-x86_64"] };
     let size = keys.iter().find_map(|k| raw.get("platforms")?.get(*k)?.get("size")?.as_u64());
     (notes_url, size)
 }
@@ -624,6 +627,9 @@ async fn launch_game(app: AppHandle, url: String) -> Result<String, String> {
         save_geometry(&app);
         let _ = main.set_title(WINDOW_TITLE);
         let _ = main.set_decorations(true); // native frame + buttons while in the game
+        // macOS: a normal (non-overlay) title bar, so the game page is not drawn under the traffic lights.
+        #[cfg(target_os = "macos")]
+        { let _ = main.set_title_bar_style(tauri::TitleBarStyle::Visible); let _ = main.set_title(WINDOW_TITLE); }
         let _ = main.set_zoom(1.0);
         if s.game_fullscreen { let _ = main.set_fullscreen(true); }
         main.navigate(u).map_err(|e| { diag!("[launch] navigate failed: {e}"); e.to_string() })?;
@@ -794,12 +800,38 @@ fn offer_restart_on_close(app: &AppHandle) -> bool {
     true
 }
 
+#[cfg(target_os = "macos")]
+fn mac_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
+    use tauri::menu::{AboutMetadata, PredefinedMenuItem as P, Submenu};
+    let about = AboutMetadata { name: Some("SOLFALL".into()), version: Some(app.package_info().version.to_string()),
+        copyright: Some("Solfall assets © their owners · Launcher Apache-2.0".into()), ..Default::default() };
+    let app_menu = Submenu::with_items(app, "SOLFALL", true, &[
+        &P::about(app, Some("About SOLFALL"), Some(about))?, &P::separator(app)?,
+        &P::hide(app, None)?, &P::hide_others(app, None)?, &P::show_all(app, None)?, &P::separator(app)?,
+        &P::quit(app, Some("Quit SOLFALL"))?,
+    ])?;
+    let edit = Submenu::with_items(app, "Edit", true, &[
+        &P::undo(app, None)?, &P::redo(app, None)?, &P::separator(app)?,
+        &P::cut(app, None)?, &P::copy(app, None)?, &P::paste(app, None)?, &P::select_all(app, None)?,
+    ])?;
+    let window = Submenu::with_items(app, "Window", true, &[
+        &P::minimize(app, None)?, &P::fullscreen(app, None)?, &P::separator(app)?, &P::close_window(app, None)?,
+    ])?;
+    Menu::with_items(app, &[&app_menu, &edit, &window])
+}
+
 fn main() {
+    // rustls crypto provider for every reqwest client (news fetch can run before the updater installs it).
+    let _ = rustls::crypto::ring::default_provider().install_default();
     // AUMID first, before any window exists (taskbar grouping "SOLFALL").
     #[cfg(windows)]
     win2::set_process_aumid();
 
-    tauri::Builder::default()
+    let builder = tauri::Builder::default();
+    // macOS: minimal app menu (About, Hide, Quit ⌘Q) + Edit (copy/paste in login fields) + Window (⌃⌘F full screen).
+    #[cfg(target_os = "macos")]
+    let builder = builder.menu(mac_menu);
+    builder
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
@@ -832,8 +864,13 @@ fn main() {
                 .resizable(true)
                 .maximized(maximized)
                 .visible(!hidden)
-                .shadow(true)
-                .decorations(false);
+                .shadow(true);
+            // macOS: native traffic lights over our own title bar (the UI hides its min/max/close and pads left).
+            #[cfg(target_os = "macos")]
+            let b = b.decorations(true).title_bar_style(tauri::TitleBarStyle::Overlay).hidden_title(true)
+                .traffic_light_position(tauri::LogicalPosition::new(20.0, 19.0)); // centred in the 52 px bar
+            #[cfg(not(target_os = "macos"))]
+            let b = b.decorations(false);
             let w = harden(&h, b).build()?;
             after_build(&w);
             if zoom_of(&s) != 1.0 { let _ = w.set_zoom(zoom_of(&s)); }

@@ -1,0 +1,2 @@
+OK  SolfallLauncher_0.3.1_amd64.AppImage  (ED, key B8AC8CD75A1001F5, "timestamp:1794609629	file:SolfallLauncher_0.3.1_amd64.AppImage	version:0.3.1")
+OK  SolfallLauncher_0.3.1_amd64.deb  (ED, key B8AC8CD75A1001F5, "timestamp:1794609629	file:SolfallLauncher_0.3.1_amd64.deb	version:0.3.1")

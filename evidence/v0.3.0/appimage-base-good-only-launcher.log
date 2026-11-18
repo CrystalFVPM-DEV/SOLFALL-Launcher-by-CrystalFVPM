@@ -1,0 +1,16 @@
+==== SOLFALL Launcher 0.3.0 start (linux x86_64) args=[]
+[env] webview runtime=2.54.0
+[env] browser args="--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection,Translate,AutofillServerCommunication --autoplay-policy=no-user-gesture-required" (identical for every webview)
+[env] data dir=/workspace/solfall-launcher/e2e/v0.3.0/bg/profile/data/online.solfall.launcher (WebView2 adds EBWebView\)
+[env] updater endpoints=["http://127.0.0.1:8788/CrystalFVPM-DEV/SOLFALL-Launcher-by-CrystalFVPM/releases/latest/download/latest.json"] pubkey id=B8AC8CD75A1001F5
+[env] settings on_launch=replace close_action=quit rev=2
+[page] main started tauri://localhost
+[ui] music error 4
+[page] main finished tauri://localhost
+[ui] music: using blob fallback
+WebKit wasn't able to find a WebVTT encoder. Subtitles handling will be degraded unless gst-plugins-bad is installed.
+GStreamer element fakevideosink not found. Please install it
+[ui] state main
+[news] GET https://raw.githubusercontent.com/CrystalFVPM-DEV/SOLFALL-Launcher-by-CrystalFVPM/main/content/news.json -> 200
+[ui] news source=network items=6
+[ui] music playing

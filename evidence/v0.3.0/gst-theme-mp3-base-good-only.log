@@ -1,0 +1,23 @@
+Setting pipeline to PAUSED ...
+Pipeline is PREROLLING ...
+/GstPipeline:pipeline0/GstDecodeBin:decodebin0/GstTypeFindElement:typefind.GstPad:src: caps = application/x-id3
+/GstPipeline:pipeline0/GstDecodeBin:decodebin0/GstTypeFindElement:typefind.GstPad:src: caps = NULL
+/GstPipeline:pipeline0/GstDecodeBin:decodebin0/GstID3Demux:id3demux0.GstPad:src: caps = NULL
+/GstPipeline:pipeline0/GstDecodeBin:decodebin0/GstID3Demux:id3demux0.GstPad:src: caps = NULL
+/GstPipeline:pipeline0/GstDecodeBin:decodebin0/GstMpg123AudioDec:mpg123audiodec0.GstPad:sink: caps = audio/mpeg, mpegversion=(int)1, mpegaudioversion=(int)1, layer=(int)3, rate=(int)44100, channels=(int)2, parsed=(boolean)true
+/GstPipeline:pipeline0/GstDecodeBin:decodebin0/GstMpegAudioParse:mpegaudioparse0.GstPad:src: caps = audio/mpeg, mpegversion=(int)1, mpegaudioversion=(int)1, layer=(int)3, rate=(int)44100, channels=(int)2, parsed=(boolean)true
+/GstPipeline:pipeline0/GstDecodeBin:decodebin0/GstMpg123AudioDec:mpg123audiodec0.GstPad:src: caps = audio/x-raw, format=(string)S16LE, layout=(string)interleaved, rate=(int)44100, channels=(int)2, channel-mask=(bitmask)0x0000000000000003
+/GstPipeline:pipeline0/GstAudioConvert:audioconvert0.GstPad:src: caps = audio/x-raw, format=(string)S16LE, layout=(string)interleaved, rate=(int)44100, channels=(int)2, channel-mask=(bitmask)0x0000000000000003
+/GstPipeline:pipeline0/GstAudioResample:audioresample0.GstPad:src: caps = audio/x-raw, format=(string)S16LE, layout=(string)interleaved, rate=(int)44100, channels=(int)2, channel-mask=(bitmask)0x0000000000000003
+/GstPipeline:pipeline0/GstFakeSink:fakesink0.GstPad:sink: caps = audio/x-raw, format=(string)S16LE, layout=(string)interleaved, rate=(int)44100, channels=(int)2, channel-mask=(bitmask)0x0000000000000003
+/GstPipeline:pipeline0/GstAudioResample:audioresample0.GstPad:sink: caps = audio/x-raw, format=(string)S16LE, layout=(string)interleaved, rate=(int)44100, channels=(int)2, channel-mask=(bitmask)0x0000000000000003
+/GstPipeline:pipeline0/GstAudioConvert:audioconvert0.GstPad:sink: caps = audio/x-raw, format=(string)S16LE, layout=(string)interleaved, rate=(int)44100, channels=(int)2, channel-mask=(bitmask)0x0000000000000003
+/GstPipeline:pipeline0/GstDecodeBin:decodebin0.GstDecodePad:src_0.GstProxyPad:proxypad1: caps = audio/x-raw, format=(string)S16LE, layout=(string)interleaved, rate=(int)44100, channels=(int)2, channel-mask=(bitmask)0x0000000000000003
+Pipeline is PREROLLED ...
+Setting pipeline to PLAYING ...
+Redistribute latency...
+New clock: GstSystemClock
+Got EOS from element "pipeline0".
+Execution ended after 0:00:00.264906246
+Setting pipeline to NULL ...
+Freeing pipeline ...

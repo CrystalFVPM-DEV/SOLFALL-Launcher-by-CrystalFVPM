@@ -121,6 +121,19 @@ function wire() {
   on('aDiscord', () => openLink(link('discord')));
   document.querySelectorAll('#launchBody [data-settings]').forEach(el => { el.onclick = () => openSettings(); el.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openSettings(); } }; });
 }
+const IS_MAC = () => S.info?.platform === 'macos';
+// Windows wording in index.html → macOS / Linux wording (text nodes only; no markup changes).
+function platformCopy() {
+  const p = S.info?.platform; if (!p || p === 'windows') return;
+  const mac = p === 'macos';
+  const map = [['Start with Windows', 'Start at login'], ['when you sign in to Windows', 'when you log in'],
+    ['Match Windows', 'Match system'], ['Follows Windows', 'Follows the system'], ['F11', FS_KEY()],
+    ...(mac ? [['to the tray', 'to the menu bar'], ['Tray icon menu', 'Menu bar icon menu'], ['In tray', 'In menu bar'], ['the tray', 'the menu bar']] : [])];
+  const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  for (let n; (n = w.nextNode());) { let t = n.nodeValue; for (const [a, b] of map) t = t.split(a).join(b); if (t !== n.nodeValue) n.nodeValue = t; }
+  document.querySelectorAll('[title]').forEach(el => { let t = el.title; for (const [a, b] of map) t = t.split(a).join(b); el.title = t; });
+}
+const FS_KEY = () => (IS_MAC() ? '⌃⌘F' : 'F11');
 function openLink(u) { if (u) invoke('open_link', { url: u }).catch(() => {}); }
 // ---------- links: news.json "links" (remote/cache/bundled) → manifest "links" → src/js/config.js. null = hidden.
 // Only https URLs are used (Rust open_link additionally allows only known hosts).
@@ -184,7 +197,7 @@ async function loadNews(m) {
     const r = await invoke('fetch_news', { etag: headers?.['If-None-Match'] || null });
     return { status: r.status, ok: r.status >= 200 && r.status < 300, headers: { get: (k) => (/^etag$/i.test(k) ? r.etag : null) }, text: async () => r.body || '' };
   };
-  const client = createNewsClient({ url: DEFAULT_NEWS_URL, launcherVersion: S.info.version, platform: 'windows', platformTag: 'windows-tauri',
+  const client = createNewsClient({ url: DEFAULT_NEWS_URL, launcherVersion: S.info.version, platform: S.info.platform, platformTag: S.info.platform + '-tauri',
     storage: localStorageAdapter(), bundledFallback: bundled, timeoutMs: 7000, fetchImpl: rustFetch });
   const v = await client.fetchNews();   // news.json v2 → buildView(): featured, roadmap, lastUpdate, items
   console.log('[news]', v.source, 'items=' + v.items.length, v.error || '');
@@ -447,7 +460,7 @@ async function syncWin() {
   try { S.win = await invoke('win_state'); } catch { return; }
   const b = $('wMax'), big = S.win.maximized || S.win.fullscreen;
   b.querySelector('svg').innerHTML = big ? RESTORE_SVG : MAX_SVG;
-  b.title = S.win.fullscreen ? 'Exit full screen (F11)' : big ? 'Restore down' : 'Maximise (F11: full screen)';
+  b.title = S.win.fullscreen ? `Exit full screen (${FS_KEY()})` : big ? 'Restore down' : `Maximise (${FS_KEY()}: full screen)`;
   b.setAttribute('aria-label', big ? 'Restore down' : 'Maximise');
   if ($('app').dataset.view === 'settings') renderSettings();
 }
@@ -465,8 +478,11 @@ wc('sLogs', () => invoke('open_logs').catch((e) => log('open logs failed ' + e))
 applyLinks();
 window.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && $('app').dataset.view === 'settings') { e.preventDefault(); const open = document.querySelector('.selw .lbx:not([hidden])'); if (open) { closeLists(); open.previousElementSibling.focus(); } else closeSettings(); }
-  // F11: on Windows it is handled natively (WebView2 AcceleratorKeyPressed) and never reaches the page.
-  if (e.key === 'F11' && S.info && S.info.platform !== 'windows') { e.preventDefault(); invoke('win_toggle_fullscreen').then(syncWin).catch(() => {}); }
+  // Full screen: Windows = F11 handled natively (WebView2 AcceleratorKeyPressed, never reaches the page);
+  // macOS = native ⌃⌘F / green button (app menu → Window → Enter Full Screen); Linux = F11 here.
+  if (e.key === 'F11' && S.info && S.info.platform === 'linux') { e.preventDefault(); invoke('win_toggle_fullscreen').then(syncWin).catch(() => {}); }
+  // Settings: ⌘, on macOS, Ctrl+, elsewhere.
+  if (e.key === ',' && (IS_MAC() ? e.metaKey : e.ctrlKey) && $('app').dataset.view !== 'settings') { e.preventDefault(); openSettings(); }
 });
 
 // ---------- pause loops when unfocused / hidden (animation-spec §4) ----------
@@ -506,7 +522,7 @@ driftSync();
 // ---------- start ----------
 render();
 (async () => {
-  try { S.info = await invoke('launcher_info'); $('app').dataset.platform = S.info.platform; } catch {}
+  try { S.info = await invoke('launcher_info'); $('app').dataset.platform = S.info.platform; platformCopy(); } catch {}
   await loadSettings(); renderSettings(); syncWin();
   if (S.info?.demo_view === 'settings') setTimeout(openSettings, 300);
   await boot();

@@ -53,7 +53,7 @@ While the E2E build is installed, please also check (all NOT VERIFIED on our sid
 * **F11** toggles fullscreen in the launcher **and** in the game window; the maximise button works;
 * Settings → Audio → Music on: the theme plays (WebView2 runs with `--autoplay-policy=no-user-gesture-required`);
 * the installer pages look like `screenshots/v0.2.1/installer-wine/` (those were captured under wine);
-* RAM: `tools\measure-webview.ps1` (see the main README).
+* RAM: `tools\measure-webview.ps1` (see [developer notes §6](../docs/DEVELOPERS.md#6-idle-cpu-and-ram-linux-proxy-webkitgtk-software-rendering-xvfb-whole-process-tree-bench)).
 
 Reproduce the kit data on the Linux box: `e2e-windows/make-kit.sh` (needs the two E2E builds).
 Linux run of the same flow (done, logs in `evidence/v0.2.1/`): `e2e/v0.2.1/make-e2e.sh root|publish [--tamper]`.

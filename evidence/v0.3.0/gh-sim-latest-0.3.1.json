@@ -1,0 +1,43 @@
+{
+  "version": "0.3.1",
+  "notes": "Solfall Launcher 0.3.1",
+  "pub_date": "2026-11-13T22:44:00Z",
+  "platforms": {
+    "windows-x86_64-nsis": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUMUFSQmExNHlzdUNmdFlDTk90WENtVlE5bUhwbW5iTFNFQTFYajJsdU05QTA5dlVWdU02V2VveHhKcEh0Q095eFdnTXk3elRpbkhjNnJlWVdQQ3pPSjU0OWxkTkJGZndjPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0NjA5NjI5CWZpbGU6U29sZmFsbExhdW5jaGVyXzAuMy4xX2FtZDY0LkFwcEltYWdlCXZlcnNpb246MC4zLjEKOXdRT1RnODVrYXBWQkhsZ2J6WmRqTUdsOUx3TDBQTVYyRnRMWndMaHk0SWxQL3NJZW1lV2JJZ01Qcjd1MnhpYm5pR0thazVZU3BjdERlamdQd1dYQUE9PQo=",
+      "url": "http://127.0.0.1:8788/CrystalFVPM-DEV/SOLFALL-Launcher-by-CrystalFVPM/releases/download/v0.3.1/SolfallLauncher_0.3.1_x64-setup.exe"
+    },
+    "windows-x86_64": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUMUFSQmExNHlzdUNmdFlDTk90WENtVlE5bUhwbW5iTFNFQTFYajJsdU05QTA5dlVWdU02V2VveHhKcEh0Q095eFdnTXk3elRpbkhjNnJlWVdQQ3pPSjU0OWxkTkJGZndjPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0NjA5NjI5CWZpbGU6U29sZmFsbExhdW5jaGVyXzAuMy4xX2FtZDY0LkFwcEltYWdlCXZlcnNpb246MC4zLjEKOXdRT1RnODVrYXBWQkhsZ2J6WmRqTUdsOUx3TDBQTVYyRnRMWndMaHk0SWxQL3NJZW1lV2JJZ01Qcjd1MnhpYm5pR0thazVZU3BjdERlamdQd1dYQUE9PQo=",
+      "url": "http://127.0.0.1:8788/CrystalFVPM-DEV/SOLFALL-Launcher-by-CrystalFVPM/releases/download/v0.3.1/SolfallLauncher_0.3.1_x64-setup.exe"
+    },
+    "darwin-x86_64": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUMUFSQmExNHlzdUNmdFlDTk90WENtVlE5bUhwbW5iTFNFQTFYajJsdU05QTA5dlVWdU02V2VveHhKcEh0Q095eFdnTXk3elRpbkhjNnJlWVdQQ3pPSjU0OWxkTkJGZndjPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0NjA5NjI5CWZpbGU6U29sZmFsbExhdW5jaGVyXzAuMy4xX2FtZDY0LkFwcEltYWdlCXZlcnNpb246MC4zLjEKOXdRT1RnODVrYXBWQkhsZ2J6WmRqTUdsOUx3TDBQTVYyRnRMWndMaHk0SWxQL3NJZW1lV2JJZ01Qcjd1MnhpYm5pR0thazVZU3BjdERlamdQd1dYQUE9PQo=",
+      "url": "http://127.0.0.1:8788/CrystalFVPM-DEV/SOLFALL-Launcher-by-CrystalFVPM/releases/download/v0.3.1/SolfallLauncher_0.3.1_universal.app.tar.gz"
+    },
+    "darwin-aarch64": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUMUFSQmExNHlzdUNmdFlDTk90WENtVlE5bUhwbW5iTFNFQTFYajJsdU05QTA5dlVWdU02V2VveHhKcEh0Q095eFdnTXk3elRpbkhjNnJlWVdQQ3pPSjU0OWxkTkJGZndjPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0NjA5NjI5CWZpbGU6U29sZmFsbExhdW5jaGVyXzAuMy4xX2FtZDY0LkFwcEltYWdlCXZlcnNpb246MC4zLjEKOXdRT1RnODVrYXBWQkhsZ2J6WmRqTUdsOUx3TDBQTVYyRnRMWndMaHk0SWxQL3NJZW1lV2JJZ01Qcjd1MnhpYm5pR0thazVZU3BjdERlamdQd1dYQUE9PQo=",
+      "url": "http://127.0.0.1:8788/CrystalFVPM-DEV/SOLFALL-Launcher-by-CrystalFVPM/releases/download/v0.3.1/SolfallLauncher_0.3.1_universal.app.tar.gz"
+    },
+    "darwin-x86_64-app": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUMUFSQmExNHlzdUNmdFlDTk90WENtVlE5bUhwbW5iTFNFQTFYajJsdU05QTA5dlVWdU02V2VveHhKcEh0Q095eFdnTXk3elRpbkhjNnJlWVdQQ3pPSjU0OWxkTkJGZndjPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0NjA5NjI5CWZpbGU6U29sZmFsbExhdW5jaGVyXzAuMy4xX2FtZDY0LkFwcEltYWdlCXZlcnNpb246MC4zLjEKOXdRT1RnODVrYXBWQkhsZ2J6WmRqTUdsOUx3TDBQTVYyRnRMWndMaHk0SWxQL3NJZW1lV2JJZ01Qcjd1MnhpYm5pR0thazVZU3BjdERlamdQd1dYQUE9PQo=",
+      "url": "http://127.0.0.1:8788/CrystalFVPM-DEV/SOLFALL-Launcher-by-CrystalFVPM/releases/download/v0.3.1/SolfallLauncher_0.3.1_universal.app.tar.gz"
+    },
+    "darwin-aarch64-app": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUMUFSQmExNHlzdUNmdFlDTk90WENtVlE5bUhwbW5iTFNFQTFYajJsdU05QTA5dlVWdU02V2VveHhKcEh0Q095eFdnTXk3elRpbkhjNnJlWVdQQ3pPSjU0OWxkTkJGZndjPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0NjA5NjI5CWZpbGU6U29sZmFsbExhdW5jaGVyXzAuMy4xX2FtZDY0LkFwcEltYWdlCXZlcnNpb246MC4zLjEKOXdRT1RnODVrYXBWQkhsZ2J6WmRqTUdsOUx3TDBQTVYyRnRMWndMaHk0SWxQL3NJZW1lV2JJZ01Qcjd1MnhpYm5pR0thazVZU3BjdERlamdQd1dYQUE9PQo=",
+      "url": "http://127.0.0.1:8788/CrystalFVPM-DEV/SOLFALL-Launcher-by-CrystalFVPM/releases/download/v0.3.1/SolfallLauncher_0.3.1_universal.app.tar.gz"
+    },
+    "linux-x86_64": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUMUFSQmExNHlzdUNmdFlDTk90WENtVlE5bUhwbW5iTFNFQTFYajJsdU05QTA5dlVWdU02V2VveHhKcEh0Q095eFdnTXk3elRpbkhjNnJlWVdQQ3pPSjU0OWxkTkJGZndjPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0NjA5NjI5CWZpbGU6U29sZmFsbExhdW5jaGVyXzAuMy4xX2FtZDY0LkFwcEltYWdlCXZlcnNpb246MC4zLjEKOXdRT1RnODVrYXBWQkhsZ2J6WmRqTUdsOUx3TDBQTVYyRnRMWndMaHk0SWxQL3NJZW1lV2JJZ01Qcjd1MnhpYm5pR0thazVZU3BjdERlamdQd1dYQUE9PQo=",
+      "url": "http://127.0.0.1:8788/CrystalFVPM-DEV/SOLFALL-Launcher-by-CrystalFVPM/releases/download/v0.3.1/SolfallLauncher_0.3.1_amd64.AppImage"
+    },
+    "linux-x86_64-appimage": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUMUFSQmExNHlzdUNmdFlDTk90WENtVlE5bUhwbW5iTFNFQTFYajJsdU05QTA5dlVWdU02V2VveHhKcEh0Q095eFdnTXk3elRpbkhjNnJlWVdQQ3pPSjU0OWxkTkJGZndjPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0NjA5NjI5CWZpbGU6U29sZmFsbExhdW5jaGVyXzAuMy4xX2FtZDY0LkFwcEltYWdlCXZlcnNpb246MC4zLjEKOXdRT1RnODVrYXBWQkhsZ2J6WmRqTUdsOUx3TDBQTVYyRnRMWndMaHk0SWxQL3NJZW1lV2JJZ01Qcjd1MnhpYm5pR0thazVZU3BjdERlamdQd1dYQUE9PQo=",
+      "url": "http://127.0.0.1:8788/CrystalFVPM-DEV/SOLFALL-Launcher-by-CrystalFVPM/releases/download/v0.3.1/SolfallLauncher_0.3.1_amd64.AppImage"
+    },
+    "linux-x86_64-deb": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUMUFSQmExNHlzdUhDVTU1VEg3RXRsSy94bUhsRk1OUWpJLzJOZkdFODFSL2ZEWllKblNzbEVIY050MEV5NWJjVG1zK0hzVk9uR3pYZVZhNithYlhNeW9KZ3RPUmROVXdjPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzk0NjA5NjI5CWZpbGU6U29sZmFsbExhdW5jaGVyXzAuMy4xX2FtZDY0LmRlYgl2ZXJzaW9uOjAuMy4xCkFyancvRzVBZ1E2REFibjhUaEZhNUtZK2svU2U1WjVSbzRTY0NPdHlkdDgveTNkQStpR3ppdWpqMkFRY1dRN0ovVEVQejdsL21nVWZUbkJMaUNyOEN3PT0K",
+      "url": "http://127.0.0.1:8788/CrystalFVPM-DEV/SOLFALL-Launcher-by-CrystalFVPM/releases/download/v0.3.1/SolfallLauncher_0.3.1_amd64.deb"
+    }
+  }
+}

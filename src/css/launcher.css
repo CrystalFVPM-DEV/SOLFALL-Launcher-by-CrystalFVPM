@@ -99,3 +99,9 @@ html, body { display: block; width: 100%; height: 100%; overflow: hidden; margin
 
 /* 0.2.1: sections without content are hidden (hidden attribute must win over component display rules). */
 #app [hidden] { display: none !important; }
+
+/* 0.3.0 macOS: native traffic lights (titleBarStyle Overlay) replace our min/max/close; pad left for them. */
+#app[data-platform="macos"] .titlebar .wc,
+#app[data-platform="macos"] .titlebar .wsep { display: none !important; }
+#app[data-platform="macos"] .titlebar { padding-left: 92px !important; padding-right: 18px !important; }
+

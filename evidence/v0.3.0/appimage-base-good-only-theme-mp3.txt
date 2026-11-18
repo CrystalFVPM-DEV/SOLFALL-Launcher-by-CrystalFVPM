@@ -1,0 +1,127 @@
+# 0.3.0 AppImage built with GSTREAMER_PLUGINS_DIR = core+base+good only (no -bad/-ugly/-libav). theme.mp3 played (pulse stream from WebKitWebProcess).
+## plugins mapped into the WebKitWebProcess (all from the AppImage):
+usr/lib/gstreamer-1.0/libgstapp.so
+usr/lib/gstreamer-1.0/libgstaudioconvert.so
+usr/lib/gstreamer-1.0/libgstaudiofx.so
+usr/lib/gstreamer-1.0/libgstaudioparsers.so
+usr/lib/gstreamer-1.0/libgstaudioresample.so
+usr/lib/gstreamer-1.0/libgstautodetect.so
+usr/lib/gstreamer-1.0/libgstcoreelements.so
+usr/lib/gstreamer-1.0/libgstid3demux.so
+usr/lib/gstreamer-1.0/libgstmpg123.so
+usr/lib/gstreamer-1.0/libgstplayback.so
+usr/lib/gstreamer-1.0/libgstpulseaudio.so
+usr/lib/gstreamer-1.0/libgstsubparse.so
+usr/lib/gstreamer-1.0/libgsttypefindfunctions.so
+usr/lib/gstreamer-1.0/libgstvolume.so
+## bundled plugin set:
+libgst1394.so gstreamer1.0-plugins-good
+libgstaasink.so gstreamer1.0-plugins-good
+libgstadaptivedemux2.so gstreamer1.0-plugins-good
+libgstadder.so gstreamer1.0-plugins-base
+libgstalaw.so gstreamer1.0-plugins-good
+libgstalpha.so gstreamer1.0-plugins-good
+libgstalphacolor.so gstreamer1.0-plugins-good
+libgstalsa.so
+libgstamrnb.so gstreamer1.0-plugins-good
+libgstamrwbdec.so gstreamer1.0-plugins-good
+libgstapetag.so gstreamer1.0-plugins-good
+libgstapp.so gstreamer1.0-plugins-base
+libgstaudioconvert.so gstreamer1.0-plugins-base
+libgstaudiofx.so gstreamer1.0-plugins-good
+libgstaudiomixer.so gstreamer1.0-plugins-base
+libgstaudioparsers.so gstreamer1.0-plugins-good
+libgstaudiorate.so gstreamer1.0-plugins-base
+libgstaudioresample.so gstreamer1.0-plugins-base
+libgstaudiotestsrc.so gstreamer1.0-plugins-base
+libgstauparse.so gstreamer1.0-plugins-good
+libgstautodetect.so gstreamer1.0-plugins-good
+libgstavi.so gstreamer1.0-plugins-good
+libgstbasedebug.so gstreamer1.0-plugins-base
+libgstcacasink.so gstreamer1.0-plugins-good
+libgstcairo.so gstreamer1.0-plugins-good
+libgstcdparanoia.so gstreamer1.0-plugins-base
+libgstcompositor.so gstreamer1.0-plugins-base
+libgstcoreelements.so libgstreamer1.0-0
+libgstcoretracers.so libgstreamer1.0-0
+libgstcutter.so gstreamer1.0-plugins-good
+libgstdebug.so gstreamer1.0-plugins-good
+libgstdeinterlace.so gstreamer1.0-plugins-good
+libgstdsd.so gstreamer1.0-plugins-base
+libgstdtmf.so gstreamer1.0-plugins-good
+libgstdv.so gstreamer1.0-plugins-good
+libgsteffectv.so gstreamer1.0-plugins-good
+libgstencoding.so gstreamer1.0-plugins-base
+libgstequalizer.so gstreamer1.0-plugins-good
+libgstflac.so gstreamer1.0-plugins-good
+libgstflv.so gstreamer1.0-plugins-good
+libgstflxdec.so gstreamer1.0-plugins-good
+libgstgdkpixbuf.so gstreamer1.0-plugins-good
+libgstgio.so gstreamer1.0-plugins-base
+libgstgoom.so gstreamer1.0-plugins-good
+libgstgoom2k1.so gstreamer1.0-plugins-good
+libgsticydemux.so gstreamer1.0-plugins-good
+libgstid3demux.so gstreamer1.0-plugins-good
+libgstimagefreeze.so gstreamer1.0-plugins-good
+libgstinterleave.so gstreamer1.0-plugins-good
+libgstisomp4.so gstreamer1.0-plugins-good
+libgstjack.so gstreamer1.0-plugins-good
+libgstjpeg.so gstreamer1.0-plugins-good
+libgstlame.so gstreamer1.0-plugins-good
+libgstlevel.so gstreamer1.0-plugins-good
+libgstlibvisual.so gstreamer1.0-plugins-base
+libgstmatroska.so gstreamer1.0-plugins-good
+libgstmonoscope.so gstreamer1.0-plugins-good
+libgstmpg123.so gstreamer1.0-plugins-good
+libgstmulaw.so gstreamer1.0-plugins-good
+libgstmultifile.so gstreamer1.0-plugins-good
+libgstmultipart.so gstreamer1.0-plugins-good
+libgstnavigationtest.so gstreamer1.0-plugins-good
+libgstogg.so gstreamer1.0-plugins-base
+libgstopengl.so
+libgstopus.so gstreamer1.0-plugins-base
+libgstoss4.so gstreamer1.0-plugins-good
+libgstossaudio.so gstreamer1.0-plugins-good
+libgstoverlaycomposition.so gstreamer1.0-plugins-base
+libgstpango.so
+libgstpbtypes.so gstreamer1.0-plugins-base
+libgstplayback.so gstreamer1.0-plugins-base
+libgstpng.so gstreamer1.0-plugins-good
+libgstpulseaudio.so gstreamer1.0-plugins-good
+libgstrawparse.so gstreamer1.0-plugins-base
+libgstreplaygain.so gstreamer1.0-plugins-good
+libgstrtp.so gstreamer1.0-plugins-good
+libgstrtpmanager.so gstreamer1.0-plugins-good
+libgstrtsp.so gstreamer1.0-plugins-good
+libgstshapewipe.so gstreamer1.0-plugins-good
+libgstshout2.so gstreamer1.0-plugins-good
+libgstsmpte.so gstreamer1.0-plugins-good
+libgstsoup.so gstreamer1.0-plugins-good
+libgstspectrum.so gstreamer1.0-plugins-good
+libgstspeex.so gstreamer1.0-plugins-good
+libgstsubparse.so gstreamer1.0-plugins-base
+libgsttaglib.so gstreamer1.0-plugins-good
+libgsttcp.so gstreamer1.0-plugins-base
+libgsttheora.so gstreamer1.0-plugins-base
+libgsttwolame.so gstreamer1.0-plugins-good
+libgsttypefindfunctions.so gstreamer1.0-plugins-base
+libgstudp.so gstreamer1.0-plugins-good
+libgstvideo4linux2.so gstreamer1.0-plugins-good
+libgstvideobox.so gstreamer1.0-plugins-good
+libgstvideoconvertscale.so gstreamer1.0-plugins-base
+libgstvideocrop.so gstreamer1.0-plugins-good
+libgstvideofilter.so gstreamer1.0-plugins-good
+libgstvideomixer.so gstreamer1.0-plugins-good
+libgstvideorate.so gstreamer1.0-plugins-base
+libgstvideotestsrc.so gstreamer1.0-plugins-base
+libgstvolume.so gstreamer1.0-plugins-base
+libgstvorbis.so gstreamer1.0-plugins-base
+libgstvpx.so gstreamer1.0-plugins-good
+libgstwavenc.so gstreamer1.0-plugins-good
+libgstwavpack.so gstreamer1.0-plugins-good
+libgstwavparse.so gstreamer1.0-plugins-good
+libgstximagesink.so
+libgstximagesrc.so gstreamer1.0-plugins-good
+libgstxingmux.so gstreamer1.0-plugins-good
+libgstxvimagesink.so
+libgsty4menc.so gstreamer1.0-plugins-good

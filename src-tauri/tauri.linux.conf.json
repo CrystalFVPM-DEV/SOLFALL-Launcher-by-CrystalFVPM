@@ -1,0 +1,11 @@
+{
+  "bundle": {
+    "targets": ["appimage", "deb"],
+    "linux": {
+      "deb": {
+        "section": "games",
+        "recommends": ["gstreamer1.0-plugins-base", "gstreamer1.0-plugins-good"]
+      }
+    }
+  }
+}

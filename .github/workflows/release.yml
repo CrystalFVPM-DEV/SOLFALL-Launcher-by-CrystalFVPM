@@ -1,39 +1,77 @@
-# Release del Solfall Launcher (Windows, Tauri v2) -> GitHub Releases
+# Release del Solfall Launcher (Windows + macOS + Linux, Tauri v2) -> GitHub Releases
 # Repo: CrystalFVPM-DEV/SOLFALL-Launcher-by-CrystalFVPM
 # Endpoint del updater (fijo en src-tauri/tauri.conf.json):
 #   https://github.com/CrystalFVPM-DEV/SOLFALL-Launcher-by-CrystalFVPM/releases/latest/download/latest.json
 #
-# SUPUESTOS (escrito por Backend el 13-11-2026, hora de Chile, UTC-3; actualizado en fase 4 el 13-11-2026
-# antes del cierre del staging; la versión la decide Engine en src-tauri/tauri.conf.json — este workflow es
-# agnóstico a 0.2.1 / 0.2.2 / cualquiera: falla si el tag no coincide, no reescribe la versión):
-#   - src-tauri/ en la raíz del repo; frontend estático en src/ sin paso de build.
-#   - npm + package-lock.json; @tauri-apps/cli 2.12.4 en devDependencies -> `npm ci` y `npx tauri build`.
-#   - Build nativo en windows-latest (sin cargo-xwin, sin --target) -> artefactos en src-tauri/target/release/bundle/nsis/.
-#   - productName exactamente "SolfallLauncher" -> el único instalador admitido es
-#     SolfallLauncher_X.Y.Z_x64-setup.exe (y su .sig). Cualquier otro nombre falla.
-#   - bundle.createUpdaterArtifacts = true (boolean). NO usar "v1Compatible": genera un .nsis.zip que este
-#     workflow no sube y no debe aparecer en el release.
-#   - plugins.updater.pubkey = clave PÚBLICA de producción, key ID minisign D78F00A86CB044C7, embebida por
-#     Engine con set-pubkey. La TEST-ONLY se rechaza.
-#   - WebView2: Engine usa bundle.windows.webviewInstallMode = embedBootstrapper. Este workflow es agnóstico
-#     al modo: no comprueba ni depende de rutas o artefactos de downloadBootstrapper, offlineInstaller o
-#     fixedRuntime; el instalador NSIS sigue siendo SolfallLauncher_X.Y.Z_x64-setup.exe en todos los modos.
-#   - La versión la decide Engine en src-tauri/tauri.conf.json; este workflow NO la reescribe: falla si el tag no coincide.
+# Historial: fase 4 (13-11-2026, Windows, publicó v0.2.1); fase 5 (13-11-2026): matriz Windows + macOS universal +
+# Linux; fase 5c (18-11-2026, hora de Chile UTC-3): nombres públicos SOLFALL-Launcher_*, GStreamer curado en el
+# AppImage + guard, verificación ad-hoc/lipo en macOS, plan B macOS split. Escrito por Backend; la app es de Engine.
 #
-# Assets del release (exactamente 3, nada más: ni zips, ni README, ni .nsis.zip):
-#   1. SolfallLauncher_X.Y.Z_x64-setup.exe      (asset principal, lo que descarga el usuario)
-#   2. SolfallLauncher_X.Y.Z_x64-setup.exe.sig  (técnico, auto-updater)
-#   3. latest.json                              (técnico, auto-updater; su url apunta al .exe)
-# `gh release create`/`upload` listan esos tres archivos explícitamente (no un glob). Tras subir, se
-# comprueba que la lista de assets del release es exactamente esa; si falta o sobra algo, no se publica.
+# SUPUESTOS (nombres de artefactos de Tauri y nombres públicos centralizados en scripts/release-assets.mjs):
+#   - src-tauri/ en la raíz; npm + package-lock.json con @tauri-apps/cli 2.12.x -> `npm ci` y `npx tauri build`.
+#   - productName exactamente "SolfallLauncher" (Tauri nombra SolfallLauncher_X.Y.Z_*, SolfallLauncher.app);
+#     bundle.createUpdaterArtifacts = true (NO "v1Compatible").
+#   - plugins.updater.pubkey = clave PÚBLICA de producción, key ID minisign D78F00A86CB044C7 (la TEST-ONLY se rechaza).
+#   - Versión: sale del TAG (vX.Y.Z -> X.Y.Z, nada hardcodeado) y DEBE ser igual a "version" de tauri.conf.json (Tauri
+#     nombra y firma con esa); el workflow no la reescribe.
+#   - WebView2 (Windows): agnóstico a bundle.windows.webviewInstallMode (Engine usa embedBootstrapper).
+#   - Los --bundles de cada job mandan sobre bundle.targets.
+#
+# Matriz de builds (la arma el job guard con `node scripts/release-assets.mjs matrix --mac-mode <modo>`):
+#   windows-latest  `tauri build --bundles nsis`                                    -> release/bundle/nsis/
+#   macos-latest    `tauri build --bundles app,dmg --target universal-apple-darwin` -> universal-apple-darwin/release/bundle/
+#                   rustup aarch64-apple-darwin + x86_64-apple-darwin; firma de código AD-HOC (signingIdentity "-" de
+#                   Engine + APPLE_SIGNING_IDENTITY=-): sin Apple ID, sin certificado, sin notarización.
+#                   Después del build (scripts/macos-adhoc.sh): `codesign --verify --deep --strict --verbose=2` y
+#                   "Signature=adhoc" sobre SolfallLauncher.app, y `lipo -archs` de Contents/MacOS/<CFBundleExecutable>
+#                   = x86_64 + arm64. Si Tauri no firmó en profundidad: `codesign --force --deep -s -`, se regeneran el
+#                   .app.tar.gz y el .dmg (hdiutil) y se re-firma el updater con `tauri signer sign --app-version X.Y.Z`
+#                   ANTES de recoger/verificar (si no se puede firmar con la versión, el job FALLA). Siempre comprueba
+#                   que el .app del .dmg y del .app.tar.gz es el verificado (mismo CDHash).
+#   ubuntu-22.04    `tauri build --bundles appimage,deb --config src-tauri/tauri.linux-appimage.conf.json` + apt
+#                   webkit2gtk-4.1 y GStreamer SÓLO core/base/good/alsa (+ dev/tools). El overlay de Engine activa
+#                   bundle.linux.appimage.bundleMediaFramework (sólo el AppImage; el .deb y los nombres no cambian).
+#                   GStreamer en el AppImage: el linuxdeploy-plugin-gstreamer.sh de tauri-bundler copia TODO
+#                   GSTREAMER_PLUGINS_DIR (por defecto /usr/lib/x86_64-linux-gnu/gstreamer-1.0) e IGNORA
+#                   GSTREAMER_INCLUDE_BAD_PLUGINS; por eso GSTREAMER_PLUGINS_DIR apunta a una carpeta curada con los
+#                   plugins de `dpkg -L libgstreamer1.0-0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good
+#                   gstreamer1.0-alsa` (scripts/appimage-gstreamer.sh curate; falla sin libgstmpg123.so = MP3) y,
+#                   tras el build, `appimage-gstreamer.sh check` extrae el AppImage y FALLA si trae algún plugin de
+#                   gstreamer1.0-plugins-bad / gstreamer1.0-libav / gstreamer1.0-plugins-ugly (listas por apt-get
+#                   download + dpkg-deb -c, sin instalarlos), alguno ajeno a core/base/good/alsa/gl/x, o no trae mpg123.
+#                   Sin -ugly/-bad/-libav: MP3 (mpg123) está en -good desde GStreamer 1.18 y 22.04 trae 1.20.
+#
+# PLAN B macOS (si el universal falla): modo "split". Se elige con el input `mac_mode` de workflow_dispatch (Actions ->
+# release -> Run workflow, "Use workflow from" = el TAG vX.Y.Z) o, para el push del tag, con la variable del repo
+# SOLFALL_MAC_MODE=split. Por defecto: universal. En split hay dos jobs macOS (aarch64-apple-darwin y
+# x86_64-apple-darwin, ambos en macos-latest con --target) y latest.json lleva darwin-aarch64(-app) -> el tarball Apple
+# Silicon y darwin-x86_64(-app) -> el Intel. Assets: 13 en vez de 10.
+#
+# Assets del release (exactamente estos, nada más; `node scripts/release-assets.mjs list --tag vX.Y.Z [--mac-mode split]`):
+#   principales (los que descarga la gente):
+#     SOLFALL-Launcher_X.Y.Z_Windows_x64-setup.exe       Windows (NSIS)
+#     SOLFALL-Launcher_X.Y.Z_macOS-universal.dmg         macOS Intel + Apple Silicon
+#       (split: SOLFALL-Launcher_X.Y.Z_macOS-AppleSilicon.dmg y SOLFALL-Launcher_X.Y.Z_macOS-Intel.dmg)
+#     SOLFALL-Launcher_X.Y.Z_Linux_x86_64.AppImage       Linux (cualquier distro)
+#     SOLFALL-Launcher_X.Y.Z_Linux_amd64.deb             Debian/Ubuntu
+#   técnicos (auto-updater): los .sig del .exe/.AppImage/.deb, SOLFALL-Launcher_X.Y.Z_macOS-universal.app.tar.gz (+ .sig)
+#     (split: ..._macOS-AppleSilicon.app.tar.gz y ..._macOS-Intel.app.tar.gz, + .sig) y latest.json.
+#   Se renombran al recoger (Tauri los genera como SolfallLauncher_X.Y.Z_x64-setup.exe, SolfallLauncher.app.tar.gz, ...):
+#   la firma minisign no depende del nombre del archivo.
+# latest.json: windows-x86_64-nsis y windows-x86_64 (compatibilidad con clientes 0.2.1) -> .exe;
+#   darwin-x86_64, darwin-aarch64 (+ -app) -> el .app.tar.gz universal (split: cada uno el suyo);
+#   linux-x86_64 (+ -appimage) -> AppImage; linux-x86_64-deb -> .deb (el updater 2.14 lo instala con pkexec dpkg -i).
 #
 # Secrets requeridos (Settings -> Secrets and variables -> Actions), los gestiona sólo el equipo de Solfall/Engine:
 #   TAURI_SIGNING_PRIVATE_KEY           clave privada del updater (minisign). Nunca se commitea.
 #   TAURI_SIGNING_PRIVATE_KEY_PASSWORD  su contraseña.
 #
-# Flujo: tag vX.Y.Z -> comprobaciones -> build + firma -> latest.json con URLs releases/download/vX.Y.Z/...
-#        -> release en DRAFT con los 3 assets + notas en inglés (--notes-file) -> verificación exacta ->
-#        PUBLICAR (último paso, --latest).
+# Flujo: tag vX.Y.Z -> guard (tag/versión/pubkey/endpoint/secrets/modo mac -> matriz) -> builds firmados (en paralelo;
+#        guards GStreamer y macOS ad-hoc/lipo) -> publish: junta artefactos -> latest.json -> lista exacta ->
+#        verificación de TODAS las firmas contra la pubkey de tauri.conf.json (scripts/verify-updater-signatures.mjs:
+#        Ed25519/BLAKE2b, key ID D78F00A86CB044C7, firma global del trusted comment y version: firmada == tag, que
+#        tauri-plugin-updater 2.14 exige) -> release en DRAFT con whitelist explícita + notas (--notes-file) ->
+#        verificación exacta de los assets del draft -> PUBLICAR (último paso, --latest).
 # Mientras es draft, /releases/latest/ no lo ve, así que los launchers instalados no ven nada a medias.
 
 name: release
@@ -41,33 +79,49 @@ name: release
 on:
   push:
     tags: ['v*']
+  # Plan B / re-ejecución manual: SIEMPRE sobre el tag ("Use workflow from" = vX.Y.Z); el guard lo exige.
+  workflow_dispatch:
+    inputs:
+      mac_mode:
+        description: 'macOS: universal (un .dmg Intel + Apple Silicon) o split (plan B: AppleSilicon.dmg + Intel.dmg)'
+        type: choice
+        options: [universal, split]
+        default: universal
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: false
 
+env:
+  # Modo macOS: input de workflow_dispatch > variable del repo SOLFALL_MAC_MODE > universal. El guard lo valida.
+  MAC_MODE: ${{ inputs.mac_mode || vars.SOLFALL_MAC_MODE || 'universal' }}
+
 jobs:
-  windows:
-    runs-on: windows-latest
-    timeout-minutes: 60
+  guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
     defaults:
       run:
         shell: bash
     env:
       TAG: ${{ github.ref_name }}
       CONF: src-tauri/tauri.conf.json
-      BUNDLE_DIR: src-tauri/target/release/bundle/nsis
-      OUT_DIR: release-assets
       EXPECTED_ENDPOINT: https://github.com/CrystalFVPM-DEV/SOLFALL-Launcher-by-CrystalFVPM/releases/latest/download/latest.json
-      DOWNLOAD_BASE: ${{ github.server_url }}/${{ github.repository }}/releases/download/${{ github.ref_name }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      - name: Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
 
       - name: Comprobar tag = versión de tauri.conf.json (y config de release)
         run: |
@@ -77,6 +131,8 @@ jobs:
           const fail = (m) => { console.error(`::error::${m}`); process.exit(1); };
           const c = JSON.parse(readFileSync(process.env.CONF, 'utf8'));
           const tag = process.env.TAG;
+          if (process.env.GITHUB_REF_TYPE !== 'tag') fail(`el workflow debe ejecutarse sobre un tag vX.Y.Z (ref_type=${process.env.GITHUB_REF_TYPE})`);
+          if (!['universal', 'split'].includes(process.env.MAC_MODE)) fail(`modo macOS "${process.env.MAC_MODE}" inválido (universal | split)`);
           if (!/^v\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/.test(tag)) fail(`tag "${tag}" no es vX.Y.Z`);
           if (tag !== `v${c.version}`) fail(`tag ${tag} no coincide con version "${c.version}" de ${process.env.CONF} (la versión la decide Engine; no se reescribe)`);
           if (c.productName !== 'SolfallLauncher') fail(`productName "${c.productName}" debe ser exactamente "SolfallLauncher" (el asset es SolfallLauncher_${c.version}_x64-setup.exe)`);
@@ -105,14 +161,59 @@ jobs:
           if (commentId !== EXPECTED_KEY_ID) fail(`plugins.updater.pubkey: key ID ${commentId} != ${EXPECTED_KEY_ID} (producción)`);
           if (!(up.endpoints ?? []).includes(process.env.EXPECTED_ENDPOINT)) fail(`plugins.updater.endpoints no incluye ${process.env.EXPECTED_ENDPOINT}`);
           if (up.dangerousInsecureTransportProtocol) fail('dangerousInsecureTransportProtocol no puede ir en un release');
+          // macOS: sólo firma ad-hoc ("-"); una identidad real exigiría certificado/Apple ID, que este workflow no usa.
+          for (const f of [process.env.CONF, 'src-tauri/tauri.macos.conf.json']) {
+            let m; try { m = JSON.parse(readFileSync(f, 'utf8')); } catch { continue; }
+            const id = m.bundle?.macOS?.signingIdentity;
+            if (id !== undefined && id !== null && id !== '-') fail(`${f}: bundle.macOS.signingIdentity "${id}" (sólo se admite "-", firma ad-hoc)`);
+          }
           console.log(`OK ${tag} = ${c.productName} ${c.version} pubkey=${commentId}`);
           JS
+
+      - name: Comprobar nombres de assets (scripts/release-assets.mjs, versión del tag)
+        run: |
+          set -euo pipefail
+          node scripts/release-assets.mjs list --tag "$TAG" --mac-mode "$MAC_MODE"
+          [ "$(node scripts/release-assets.mjs version --tag "$TAG")" = "${TAG#v}" ] || { echo "::error::release-assets.mjs version != tag"; exit 1; }
+
+      - name: Matriz de build (modo macOS)
+        id: matrix
+        run: |
+          set -euo pipefail
+          m=$(node scripts/release-assets.mjs matrix --mac-mode "$MAC_MODE")
+          echo "$m"
+          echo "matrix=$m" >> "$GITHUB_OUTPUT"
 
       - name: Comprobar secrets de firma
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
         run: |
           if [ -z "${TAURI_SIGNING_PRIVATE_KEY}" ]; then echo "::error::falta el secret TAURI_SIGNING_PRIVATE_KEY"; exit 1; fi
+
+  build:
+    needs: guard
+    name: build (${{ matrix.platform }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: true
+      # windows | macos (universal) o macos-aarch64 + macos-x86_64 (plan B) | linux; ver release-assets.mjs matrix
+      matrix: ${{ fromJSON(needs.guard.outputs.matrix) }}
+    defaults:
+      run:
+        shell: bash
+    env:
+      TAG: ${{ github.ref_name }}
+      PLATFORM: ${{ matrix.platform }}
+      BUNDLES: ${{ matrix.bundles }}
+      TAURI_TARGET: ${{ matrix.tauri_target }}
+      TAURI_CONFIG: ${{ matrix.tauri_config }}
+      OUT_DIR: release-assets
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Node
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -122,98 +223,204 @@ jobs:
 
       - name: Rust (stable)
         uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          targets: ${{ matrix.rust_targets }}
 
       - name: Caché de Rust
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           workspaces: src-tauri -> target
+          key: ${{ matrix.platform }}
+
+      - name: Dependencias de sistema (Linux, webkit2gtk-4.1)
+        if: matrix.family == 'linux'
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          # GStreamer: SÓLO core/base/good/alsa (+ dev/tools). Nada de -bad, -libav ni -ugly (ver cabecera).
+          sudo apt-get install -y --no-install-recommends \
+            build-essential curl wget file pkg-config patchelf squashfs-tools \
+            libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libssl-dev libxdo-dev libgtk-3-dev \
+            libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev gstreamer1.0-tools \
+            gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-alsa
+          test -x /usr/lib/x86_64-linux-gnu/gstreamer1.0/gstreamer-1.0/gst-plugin-scanner || { echo "::error::falta gst-plugin-scanner"; exit 1; }
+          # linuxdeploy (AppImage) sin FUSE en el runner
+          echo "APPIMAGE_EXTRACT_AND_RUN=1" >> "$GITHUB_ENV"
+
+      - name: GStreamer curado para el AppImage (Linux; GSTREAMER_PLUGINS_DIR)
+        if: matrix.family == 'linux'
+        run: |
+          set -euo pipefail
+          # linuxdeploy-plugin-gstreamer copia TODO lo que haya en GSTREAMER_PLUGINS_DIR: carpeta sólo con
+          # core/base/good/alsa según dpkg -L, así no se cuela nada preinstalado en el runner. Falla sin mpg123.
+          dir="${RUNNER_TEMP}/gst-plugins-curated"
+          bash scripts/appimage-gstreamer.sh curate "$dir"
+          echo "GSTREAMER_PLUGINS_DIR=$dir" >> "$GITHUB_ENV"
+
+      - name: Firma de código ad-hoc (macOS; sin Apple ID ni notarización)
+        if: matrix.family == 'macos'
+        run: |
+          set -euo pipefail
+          for v in APPLE_ID APPLE_PASSWORD APPLE_TEAM_ID APPLE_API_KEY APPLE_API_ISSUER APPLE_CERTIFICATE; do
+            if [ -n "${!v:-}" ]; then echo "::error::$v definido: este workflow sólo hace firma ad-hoc"; exit 1; fi
+          done
+          echo "APPLE_SIGNING_IDENTITY=-" >> "$GITHUB_ENV"
 
       - name: Dependencias (npm ci)
         run: npm ci
 
-      # OPCIONAL: firma Authenticode del .exe (SmartScreen). Independiente de la firma del updater.
+      # OPCIONAL (Windows): firma Authenticode del .exe (SmartScreen). Independiente de la firma del updater.
       # Se haría con bundle.windows.signCommand en un overlay (`--config src-tauri/tauri.sign.conf.json`), p. ej. Azure
-      # Artifact Signing (añadir `id-token: write` a permissions + azure/login fijado por SHA) o la herramienta HSM del
-      # proveedor del certificado OV/EV. Ver backend/signing/README.md de la propuesta.
-      # - name: Overlay de firma Authenticode
-      #   run: |
-      #     printf '%s' '{"bundle":{"windows":{"signCommand":"trusted-signing-cli -e ${{ vars.AZURE_SIGNING_ENDPOINT }} -a ${{ vars.AZURE_SIGNING_ACCOUNT }} -c ${{ vars.AZURE_SIGNING_PROFILE }} %1"}}}' > src-tauri/tauri.sign.conf.json
+      # Artifact Signing (añadir `id-token: write` + azure/login fijado por SHA) o la herramienta HSM del proveedor
+      # del certificado OV/EV. Ver backend/signing/README.md de la propuesta.
 
-      - name: Build + firma del updater (npx tauri build --bundles nsis)
+      - name: Build + firma del updater (npx tauri build)
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-        run: npx tauri build --bundles nsis
+        run: |
+          set -euo pipefail
+          args=(--bundles "$BUNDLES")
+          if [ -n "$TAURI_TARGET" ]; then args+=(--target "$TAURI_TARGET"); fi
+          if [ -n "$TAURI_CONFIG" ]; then
+            # El overlay sólo puede tocar bundle.linux.appimage: así no cambia nombres (productName/version) ni el .deb.
+            node -e '
+              const c = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
+              const ok = Object.keys(c).join() === "bundle" && Object.keys(c.bundle).join() === "linux" && Object.keys(c.bundle.linux).join() === "appimage";
+              if (!ok) { console.error("::error::" + process.argv[1] + " sólo puede contener bundle.linux.appimage"); process.exit(1); }
+            ' "$TAURI_CONFIG"
+            args+=(--config "$TAURI_CONFIG")
+          fi
+          echo "npx tauri build ${args[*]}"
+          npx tauri build "${args[@]}"
+
+      - name: Guard GStreamer del AppImage (Linux; sin -bad/-libav/-ugly, con mpg123)
+        if: matrix.family == 'linux'
+        run: |
+          set -euo pipefail
+          img="src-tauri/target/$(node scripts/release-assets.mjs source appimage --tag "$TAG")"
+          ls -la "$img"
+          bash scripts/appimage-gstreamer.sh check "$img"
+
+      - name: Verificar firma ad-hoc y arquitecturas (macOS; codesign + lipo)
+        if: matrix.family == 'macos'
+        env:
+          # sólo se usan si hay que re-firmar el .app.tar.gz tras un codesign --force --deep
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          info=$(node scripts/release-assets.mjs platform-info --platform "$PLATFORM" --tag "$TAG" --mac-mode "$MAC_MODE")
+          echo "$info"
+          get() { sed -n "s/^$1=//p" <<< "$info"; }
+          bash scripts/macos-adhoc.sh --app "src-tauri/target/$(get MAC_APP)" --dmg "src-tauri/target/$(get MAC_DMG)" \
+            --tar "src-tauri/target/$(get MAC_TAR)" --archs "$(get MAC_ARCHS)" --version "$(get MAC_VERSION)"
+
+      - name: Recoger artefactos con su nombre final
+        run: node scripts/release-assets.mjs collect --platform "$PLATFORM" --out "$OUT_DIR" --tag "$TAG" --mac-mode "$MAC_MODE"
+
+      - name: Verificar firmas del updater (pubkey de tauri.conf.json)
+        run: node scripts/verify-updater-signatures.mjs --dir "$OUT_DIR" --conf src-tauri/tauri.conf.json --expect-key-id D78F00A86CB044C7 --expect-version "${TAG#v}"
+
+      - name: Subir artefactos del job
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-${{ matrix.platform }}
+          path: release-assets/
+          if-no-files-found: error
+          retention-days: 3
+          compression-level: 0
+
+  publish:
+    needs: [guard, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    defaults:
+      run:
+        shell: bash
+    env:
+      TAG: ${{ github.ref_name }}
+      OUT_DIR: release-assets
+      DOWNLOAD_BASE: ${{ github.server_url }}/${{ github.repository }}/releases/download/${{ github.ref_name }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+
+      - name: Descargar artefactos de los builds
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: release-*
+          path: release-assets
+          merge-multiple: true
 
       - name: Generar latest.json (URLs releases/download/<tag>/...)
         run: |
           set -euo pipefail
-          mkdir -p "$OUT_DIR"
-          node --input-type=module <<'JS'
-          import { readFileSync, copyFileSync, writeFileSync, existsSync, readdirSync } from 'node:fs';
-          import { join } from 'node:path';
-          const { CONF, TAG, BUNDLE_DIR, OUT_DIR, DOWNLOAD_BASE } = process.env;
-          const fail = (m) => { console.error(`::error::${m}`); process.exit(1); };
-          const c = JSON.parse(readFileSync(CONF, 'utf8'));
-          if (c.productName !== 'SolfallLauncher') fail(`productName "${c.productName}" debe ser exactamente "SolfallLauncher"`);
-          const exe = `SolfallLauncher_${c.version}_x64-setup.exe`;
-          for (const f of [exe, `${exe}.sig`]) if (!existsSync(join(BUNDLE_DIR, f))) fail(`no existe ${join(BUNDLE_DIR, f)} (el instalador debe llamarse exactamente ${exe})`);
-          const signature = readFileSync(join(BUNDLE_DIR, `${exe}.sig`), 'utf8').trim();
-          if (!Buffer.from(signature, 'base64').toString('utf8').startsWith('untrusted comment:')) fail('.sig con formato inesperado');
-          copyFileSync(join(BUNDLE_DIR, exe), join(OUT_DIR, exe));
-          copyFileSync(join(BUNDLE_DIR, `${exe}.sig`), join(OUT_DIR, `${exe}.sig`));
-          const entry = { signature, url: `${DOWNLOAD_BASE}/${encodeURIComponent(exe)}` };
-          const latest = {
-            version: c.version,
-            notes: `Solfall Launcher ${c.version}`,
-            pub_date: new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'),
-            platforms: { 'windows-x86_64-nsis': entry, 'windows-x86_64': entry },
-          };
-          writeFileSync(join(OUT_DIR, 'latest.json'), JSON.stringify(latest, null, 2) + '\n');
-          const want = [exe, `${exe}.sig`, 'latest.json'].sort();
-          const got = readdirSync(OUT_DIR).filter((n) => n !== '.' && n !== '..').sort();
-          if (got.join('\n') !== want.join('\n')) fail(`OUT_DIR debe contener exactamente ${want.join(', ')}; hay: ${got.join(', ')}`);
-          if (!entry.url.endsWith(exe) && !entry.url.endsWith(encodeURIComponent(exe))) fail(`latest.json url no apunta al .exe: ${entry.url}`);
-          console.log(JSON.stringify(latest, null, 2));
-          JS
+          node scripts/release-assets.mjs latest-json --dir "$OUT_DIR" --download-base "$DOWNLOAD_BASE" --tag "$TAG" --mac-mode "$MAC_MODE"
+          node scripts/release-assets.mjs check-dir --dir "$OUT_DIR" --tag "$TAG" --mac-mode "$MAC_MODE"
           ls -la "$OUT_DIR"
 
-      - name: Crear release en DRAFT con .exe + .sig + latest.json
+      - name: Verificar TODAS las firmas contra la pubkey de tauri.conf.json (antes de publicar)
+        run: node scripts/verify-updater-signatures.mjs --dir "$OUT_DIR" --latest-json "$OUT_DIR/latest.json" --conf src-tauri/tauri.conf.json --expect-key-id D78F00A86CB044C7 --expect-version "${TAG#v}"
+
+      - name: Crear release en DRAFT (whitelist explícita de assets)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          VERSION="${TAG#v}"
-          EXE="SolfallLauncher_${VERSION}_x64-setup.exe"
-          ASSET_EXE="$OUT_DIR/$EXE"
-          ASSET_SIG="$OUT_DIR/$EXE.sig"
-          ASSET_JSON="$OUT_DIR/latest.json"
-          for f in "$ASSET_EXE" "$ASSET_SIG" "$ASSET_JSON"; do
-            [ -f "$f" ] || { echo "::error::falta $f"; exit 1; }
+          mapfile -t NAMES < <(node scripts/release-assets.mjs list --tag "$TAG" --mac-mode "$MAC_MODE")
+          COUNT=$(node scripts/release-assets.mjs count --tag "$TAG" --mac-mode "$MAC_MODE")
+          [ "${#NAMES[@]}" -eq "$COUNT" ] || { echo "::error::se esperaban $COUNT assets, hay ${#NAMES[@]}"; exit 1; }
+          ASSETS=()
+          for n in "${NAMES[@]}"; do
+            [ -f "$OUT_DIR/$n" ] || { echo "::error::falta $OUT_DIR/$n"; exit 1; }
+            ASSETS+=("$OUT_DIR/$n")
           done
-          extras=0
-          for f in "$OUT_DIR"/*; do
-            case "$(basename "$f")" in
-              "$EXE"|"$EXE.sig"|latest.json) ;;
-              *) echo "::error::archivo no permitido en $OUT_DIR: $(basename "$f")"; extras=1 ;;
-            esac
-          done
-          [ "$extras" -eq 0 ] || exit 1
+          node scripts/release-assets.mjs check-dir --dir "$OUT_DIR" --tag "$TAG" --mac-mode "$MAC_MODE"
+          TEMPLATE="${RUNNER_TEMP:-/tmp}/release-notes.tpl.md"
           NOTES_FILE="${RUNNER_TEMP:-/tmp}/release-notes.md"
-          cat > "$NOTES_FILE" <<'NOTES'
+          cat > "$TEMPLATE" <<'NOTES'
           This is an unofficial, community-made launcher. It is not affiliated with or endorsed by the Solfall team, unless they adopt it.
 
-          Download only the .exe; .sig/latest.json are for the auto-updater.
+          Download only the installer for your operating system (see the table below). The .sig files, the .app.tar.gz and latest.json are for the auto-updater; you don't need them.
+
+          ## Which file do I download?
+
+          | Your computer | Download | Notes |
+          | --- | --- | --- |
+          | Windows 10/11 (64-bit) | `{{EXE}}` | Run the installer. |
+          {{MACOS_ROWS}}
+          | Linux (x86_64, any distro) | `{{APPIMAGE}}` | Make it executable (`chmod +x`), then run it. |
+          | Debian / Ubuntu (x86_64) | `{{DEB}}` | Install with `sudo apt install ./{{DEB}}`. |
+
+          ### macOS: first launch
+
+          Open the .dmg and drag SolfallLauncher.app to Applications. The app is ad-hoc signed and not notarized, so macOS blocks it the first time. To allow it, either:
+
+          - run `xattr -dr com.apple.quarantine "/Applications/SolfallLauncher.app"` in Terminal once, or
+          - try to open it, then go to System Settings → Privacy & Security and click Open Anyway.
+
+          (Right-click → Open only works on macOS 14 and earlier.)
 
           Solfall assets used with permission.
           NOTES
+          node scripts/release-assets.mjs notes --template "$TEMPLATE" --out "$NOTES_FILE" --tag "$TAG" --mac-mode "$MAC_MODE"
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft > /tmp/isdraft 2>/dev/null; then
             if [ "$(cat /tmp/isdraft)" != "true" ]; then echo "::error::el release $TAG ya está publicado; no se toca"; exit 1; fi
             echo "draft existente (re-ejecución): se reemplazan los assets y se actualizan las notas"
             gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --title "Solfall Launcher $TAG" --notes-file "$NOTES_FILE"
-            gh release upload "$TAG" "$ASSET_EXE" "$ASSET_SIG" "$ASSET_JSON" --clobber --repo "$GITHUB_REPOSITORY"
+            gh release upload "$TAG" "${ASSETS[@]}" --clobber --repo "$GITHUB_REPOSITORY"
           else
-            gh release create "$TAG" "$ASSET_EXE" "$ASSET_SIG" "$ASSET_JSON" --draft --verify-tag --repo "$GITHUB_REPOSITORY" \
+            gh release create "$TAG" "${ASSETS[@]}" --draft --verify-tag --repo "$GITHUB_REPOSITORY" \
               --title "Solfall Launcher $TAG" --notes-file "$NOTES_FILE"
           fi
 
@@ -222,13 +429,12 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          VERSION="${TAG#v}"
-          EXE="SolfallLauncher_${VERSION}_x64-setup.exe"
-          names=$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '[.assets[].name] | sort | .[]')
-          expected=$(printf '%s\n' "$EXE" "$EXE.sig" latest.json | LC_ALL=C sort)
+          names=$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '[.assets[].name] | .[]' | LC_ALL=C sort)
+          expected=$(node scripts/release-assets.mjs list --tag "$TAG" --mac-mode "$MAC_MODE" | LC_ALL=C sort)
           echo "$names"
           if [ "$names" != "$expected" ]; then
-            echo "::error::los assets del release deben ser exactamente $EXE, $EXE.sig y latest.json (nada más: ni zips, ni README, ni .nsis.zip)"
+            echo "::error::los assets del draft deben ser exactamente estos (nada más: ni zips, ni README, ni .nsis.zip):"
+            echo "$expected"
             echo "hay: $names"
             exit 1
           fi

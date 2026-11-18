@@ -1,0 +1,31 @@
+ Package: solfall-launcher
+ Version: 0.3.0
+ Architecture: amd64
+ Installed-Size: 11682
+ Maintainer: CrystalFVPM
+ Section: games
+ Priority: optional
+ Depends: libayatana-appindicator3-1, libwebkit2gtk-4.1-0, libgtk-3-0
+ Recommends: gstreamer1.0-plugins-base, gstreamer1.0-plugins-good
+ Description: SOLFALL Launcher
+  SOLFALL Launcher: opens Solfall (play.solfall.online), shows news and keeps itself up to date. Windows, macOS and Linux.
+usr
+usr/share
+usr/share/applications
+usr/share/applications/SolfallLauncher.desktop
+usr/share/icons
+usr/share/icons/hicolor
+usr/share/icons/hicolor/128x128
+usr/share/icons/hicolor/128x128/apps
+usr/share/icons/hicolor/128x128/apps/solfall-launcher.png
+usr/share/icons/hicolor/256x256@2
+usr/share/icons/hicolor/256x256@2/apps
+usr/share/icons/hicolor/256x256@2/apps/solfall-launcher.png
+usr/share/icons/hicolor/32x32
+usr/share/icons/hicolor/32x32/apps
+usr/share/icons/hicolor/32x32/apps/solfall-launcher.png
+usr/share/icons/hicolor/512x512
+usr/share/icons/hicolor/512x512/apps
+usr/share/icons/hicolor/512x512/apps/solfall-launcher.png
+usr/bin
+usr/bin/solfall-launcher

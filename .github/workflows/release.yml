@@ -196,7 +196,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 90
     strategy:
-      fail-fast: true
+      fail-fast: false
       # windows | macos (universal) o macos-aarch64 + macos-x86_64 (plan B) | linux; ver release-assets.mjs matrix
       matrix: ${{ fromJSON(needs.guard.outputs.matrix) }}
     defaults:
@@ -237,11 +237,13 @@ jobs:
         run: |
           set -euo pipefail
           sudo apt-get update
+          # El runner ubuntu-22.04 trae libunwind-14-dev, que choca con libunwind-dev (dependencia de libgstreamer1.0-dev).
+          sudo apt-get remove -y libunwind-14-dev || true
           # GStreamer: SÓLO core/base/good/alsa (+ dev/tools). Nada de -bad, -libav ni -ugly (ver cabecera).
           sudo apt-get install -y --no-install-recommends \
             build-essential curl wget file pkg-config patchelf squashfs-tools \
             libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libssl-dev libxdo-dev libgtk-3-dev \
-            libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev gstreamer1.0-tools \
+            libunwind-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev gstreamer1.0-tools \
             gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-alsa
           test -x /usr/lib/x86_64-linux-gnu/gstreamer1.0/gstreamer-1.0/gst-plugin-scanner || { echo "::error::falta gst-plugin-scanner"; exit 1; }
           # linuxdeploy (AppImage) sin FUSE en el runner

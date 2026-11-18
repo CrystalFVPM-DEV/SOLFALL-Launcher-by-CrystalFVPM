@@ -207,7 +207,7 @@ jobs:
       PLATFORM: ${{ matrix.platform }}
       BUNDLES: ${{ matrix.bundles }}
       TAURI_TARGET: ${{ matrix.tauri_target }}
-      TAURI_CONFIG: ${{ matrix.tauri_config }}
+      EXTRA_TAURI_CONFIG: ${{ matrix.tauri_config }}
       OUT_DIR: release-assets
     steps:
       - name: Checkout
@@ -284,14 +284,14 @@ jobs:
           set -euo pipefail
           args=(--bundles "$BUNDLES")
           if [ -n "$TAURI_TARGET" ]; then args+=(--target "$TAURI_TARGET"); fi
-          if [ -n "$TAURI_CONFIG" ]; then
+          if [ -n "$EXTRA_TAURI_CONFIG" ]; then
             # El overlay sólo puede tocar bundle.linux.appimage: así no cambia nombres (productName/version) ni el .deb.
             node -e '
               const c = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
               const ok = Object.keys(c).join() === "bundle" && Object.keys(c.bundle).join() === "linux" && Object.keys(c.bundle.linux).join() === "appimage";
               if (!ok) { console.error("::error::" + process.argv[1] + " sólo puede contener bundle.linux.appimage"); process.exit(1); }
-            ' "$TAURI_CONFIG"
-            args+=(--config "$TAURI_CONFIG")
+            ' "$EXTRA_TAURI_CONFIG"
+            args+=(--config "$EXTRA_TAURI_CONFIG")
           fi
           echo "npx tauri build ${args[*]}"
           npx tauri build "${args[@]}"
